@@ -1,296 +1,48 @@
-
 <?php
-
 require_once __DIR__ . '/includes/functions.php';
 require_login();
-
 $pageTitle = 'Savings Tracker';
 $pdo = require __DIR__ . '/config/database.php';
+$userId = current_user_id();
+$errors = [];
 
-$userId = (int) $_SESSION['user_id'];
-
-$message = '';
-$error = '';
-
-// Add savings record.
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_saving'])) {
-
-    $projectId = (int) ($_POST['project_id'] ?? 0);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verify_csrf_token($_POST['csrf_token'] ?? null)) $errors[] = 'Session expired. Refresh and try again.';
+    $projectId = (int)($_POST['project_id'] ?? 0);
     $amount = filter_var($_POST['amount'] ?? null, FILTER_VALIDATE_FLOAT);
-    $savingDate = $_POST['saving_date'] ?? '';
-    $notes = trim($_POST['notes'] ?? '');
-
-    if ($projectId <= 0 || $amount === false || $amount <= 0) {
-        $error = 'Please enter a valid project and savings amount.';
-    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $savingDate)) {
-        $error = 'Please enter a valid savings date.';
-    } else {
-
-        $check = $pdo->prepare("
-            SELECT project_id
-            FROM projects
-            WHERE project_id = ?
-            AND user_id = ?
-        ");
-
-        $check->execute([$projectId, $userId]);
-
-        if (!$check->fetch()) {
-            $error = 'Invalid bicycle project.';
-        } else {
-
-            $stmt = $pdo->prepare("
-                INSERT INTO savings_records
-                (user_id, project_id, amount, saving_date, notes)
-                VALUES (?, ?, ?, ?, ?)
-            ");
-
-            $stmt->execute([
-                $userId,
-                $projectId,
-                $amount,
-                $savingDate,
-                $notes
-            ]);
-
-            $message = 'Savings record added successfully.';
-        }
+    $date = (string)($_POST['saving_date'] ?? date('Y-m-d'));
+    $notes = trim((string)($_POST['notes'] ?? ''));
+    $stmt = $pdo->prepare('SELECT project_id FROM projects WHERE project_id = ? AND user_id = ?');
+    $stmt->execute([$projectId, $userId]);
+    if (!$stmt->fetch()) $errors[] = 'Choose one of your bicycle plans.';
+    if ($amount === false || $amount <= 0) $errors[] = 'Enter an amount greater than zero.';
+    $dateObject = DateTime::createFromFormat('Y-m-d', $date);
+    if (!$dateObject || $dateObject->format('Y-m-d') !== $date) $errors[] = 'Enter a valid date.';
+    if (!$errors) {
+        $stmt = $pdo->prepare('INSERT INTO savings_records (user_id, project_id, amount, saving_date, notes) VALUES (?, ?, ?, ?, ?)');
+        $stmt->execute([$userId, $projectId, $amount, $date, $notes ?: null]);
+        set_flash('success', 'Savings record added.');
+        redirect('savings.php');
     }
 }
 
-// Delete savings record.
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_saving'])) {
-
-    $savingId = (int) ($_POST['saving_id'] ?? 0);
-
-    $stmt = $pdo->prepare("
-        DELETE FROM savings_records
-        WHERE saving_id = ?
-        AND user_id = ?
-    ");
-
-    $stmt->execute([$savingId, $userId]);
-
-    $message = 'Savings record deleted.';
-}
-
-// Get projects.
-$projectStmt = $pdo->prepare("
-    SELECT project_id, project_name, budget_amount
-    FROM projects
-    WHERE user_id = ?
-    ORDER BY created_at DESC
-");
-
-$projectStmt->execute([$userId]);
-$projects = $projectStmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Get savings history.
-$savingStmt = $pdo->prepare("
-    SELECT
-        s.saving_id,
-        s.project_id,
-        s.amount,
-        s.saving_date,
-        s.notes,
-        p.project_name,
-        p.budget_amount
-    FROM savings_records s
-    INNER JOIN projects p
-        ON p.project_id = s.project_id
-    WHERE s.user_id = ?
-    AND p.user_id = ?
-    ORDER BY s.saving_date DESC, s.saving_id DESC
-");
-
-$savingStmt->execute([$userId, $userId]);
-$savings = $savingStmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Calculate totals.
-$totalSaved = 0;
-
-foreach ($savings as $saving) {
-    $totalSaved += (float) $saving['amount'];
-}
-
-$totalTarget = 0;
-
-foreach ($projects as $project) {
-    $totalTarget += (float) $project['budget_amount'];
-}
-
-$remaining = max(0, $totalTarget - $totalSaved);
-
+$stmt = $pdo->prepare('SELECT project_id, project_name, budget_amount FROM projects WHERE user_id = ? ORDER BY created_at DESC');
+$stmt->execute([$userId]);
+$projects = $stmt->fetchAll();
+$stmt = $pdo->prepare('SELECT s.*, p.project_name FROM savings_records s LEFT JOIN projects p ON p.project_id = s.project_id WHERE s.user_id = ? ORDER BY s.saving_date DESC, s.saving_id DESC');
+$stmt->execute([$userId]);
+$records = $stmt->fetchAll();
+$stmt = $pdo->prepare('SELECT COALESCE(SUM(amount),0) FROM savings_records WHERE user_id = ?');
+$stmt->execute([$userId]);
+$totalSavings = (float)$stmt->fetchColumn();
+$stmt = $pdo->prepare('SELECT COALESCE(SUM(budget_amount),0) FROM projects WHERE user_id = ?');
+$stmt->execute([$userId]);
+$totalBudget = (float)$stmt->fetchColumn();
+$remaining = max(0, $totalBudget - $totalSavings);
 require __DIR__ . '/includes/header.php';
-
 ?>
-
-<div class="dashboard-header">
-    <div>
-        <h1>Savings Tracker</h1>
-        <p>Track the money you save for your bicycle builds.</p>
-    </div>
-</div>
-
-<?php if ($message): ?>
-    <div class="alert success"><?= h($message) ?></div>
-<?php endif; ?>
-
-<?php if ($error): ?>
-    <div class="alert error"><?= h($error) ?></div>
-<?php endif; ?>
-
-<section class="dashboard-stats">
-
-    <div class="stat-card">
-        <span>Total Savings</span>
-        <h2>₱<?= number_format($totalSaved, 2) ?></h2>
-    </div>
-
-    <div class="stat-card">
-        <span>Total Build Budget</span>
-        <h2>₱<?= number_format($totalTarget, 2) ?></h2>
-    </div>
-
-    <div class="stat-card">
-        <span>Remaining Savings Goal</span>
-        <h2>₱<?= number_format($remaining, 2) ?></h2>
-    </div>
-
-</section>
-
-<section class="overview-card">
-
-    <h2>Add Savings</h2>
-
-    <?php if (empty($projects)): ?>
-
-        <p>Create a bicycle project first before recording savings.</p>
-
-    <?php else: ?>
-
-        <form method="POST">
-
-            <label>Select Bicycle Build</label>
-
-            <select name="project_id" required>
-                <option value="">Choose a project</option>
-
-                <?php foreach ($projects as $project): ?>
-                    <option value="<?= (int) $project['project_id'] ?>">
-                        <?= h($project['project_name']) ?>
-                    </option>
-                <?php endforeach; ?>
-
-            </select>
-
-            <label>Amount Saved (PHP)</label>
-
-            <input
-                type="number"
-                name="amount"
-                min="0.01"
-                step="0.01"
-                placeholder="Enter amount"
-                required
-            >
-
-            <label>Date Saved</label>
-
-            <input
-                type="date"
-                name="saving_date"
-                value="<?= date('Y-m-d') ?>"
-                required
-            >
-
-            <label>Notes (Optional)</label>
-
-            <input
-                type="text"
-                name="notes"
-                maxlength="255"
-                placeholder="Example: Weekly savings"
-            >
-
-            <button type="submit" name="add_saving">
-                Save Record
-            </button>
-
-        </form>
-
-    <?php endif; ?>
-
-</section>
-
-<section class="overview-card" style="margin-top: 25px;">
-
-    <h2>Savings History</h2>
-
-    <?php if (empty($savings)): ?>
-
-        <p>No savings records yet.</p>
-
-    <?php else: ?>
-
-        <div style="overflow-x:auto;">
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Project</th>
-                        <th>Amount</th>
-                        <th>Date</th>
-                        <th>Notes</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-
-                    <?php foreach ($savings as $saving): ?>
-
-                        <tr>
-                            <td><?= h($saving['project_name']) ?></td>
-
-                            <td>
-                                ₱<?= number_format((float) $saving['amount'], 2) ?>
-                            </td>
-
-                            <td><?= h($saving['saving_date']) ?></td>
-
-                            <td><?= h($saving['notes'] ?? '') ?></td>
-
-                            <td>
-                                <form method="POST"
-                                      onsubmit="return confirm('Delete this savings record?');">
-
-                                    <input
-                                        type="hidden"
-                                        name="saving_id"
-                                        value="<?= (int) $saving['saving_id'] ?>"
-                                    >
-
-                                    <button
-                                        type="submit"
-                                        name="delete_saving"
-                                    >
-                                        Delete
-                                    </button>
-
-                                </form>
-                            </td>
-                        </tr>
-
-                    <?php endforeach; ?>
-
-                </tbody>
-            </table>
-
-        </div>
-
-    <?php endif; ?>
-
-</section>
-
+<div class="page-header"><div><p class="eyebrow">YOUR SAVINGS GOALS</p><h1>Savings Tracker</h1><p>Record money saved for your bicycle build plans.</p></div></div>
+<section class="dashboard-stats"><article class="stat-card"><span>Total Savings</span><h2><?= money($totalSavings) ?></h2><p>All your recorded savings</p></article><article class="stat-card"><span>Combined Build Budgets</span><h2><?= money($totalBudget) ?></h2><p>Budget across your saved plans</p></article><article class="stat-card"><span>Remaining Savings Goal</span><h2><?= money($remaining) ?></h2><p>Combined budget less recorded savings</p></article></section>
+<section class="content-card"><h2>Add Savings</h2><?php foreach ($errors as $error): ?><div class="alert error"><?= h($error) ?></div><?php endforeach; ?><?php if (!$projects): ?><p>Create a bicycle build plan before recording savings for it.</p><?php else: ?><form method="post" class="form-grid"><input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>"><div class="form-group"><label>Bicycle Build</label><select name="project_id" required><option value="">Choose build</option><?php foreach ($projects as $project): ?><option value="<?= (int)$project['project_id'] ?>"><?= h($project['project_name']) ?> — <?= money($project['budget_amount']) ?></option><?php endforeach; ?></select></div><div class="form-group"><label>Amount Saved (₱)</label><input type="number" name="amount" min="0.01" step="0.01" required></div><div class="form-group"><label>Date</label><input type="date" name="saving_date" value="<?= date('Y-m-d') ?>" required></div><div class="form-group"><label>Notes (Optional)</label><input name="notes" maxlength="255" placeholder="Example: Weekly savings"></div><button class="btn" type="submit">Record Savings</button></form><?php endif; ?></section>
+<section class="dashboard-projects"><div class="section-heading"><div><h2>Savings History</h2><p>Your recorded savings entries.</p></div></div><?php if (!$records): ?><div class="empty-state">No savings records yet.</div><?php else: ?><div class="project-list"><?php foreach ($records as $record): ?><article class="savings-item"><div><strong><?= h($record['project_name'] ?: 'Unassigned build') ?></strong><p><?= h($record['notes'] ?: 'Savings contribution') ?></p><small><?= h($record['saving_date']) ?></small></div><strong><?= money($record['amount']) ?></strong></article><?php endforeach; ?></div><?php endif; ?></section>
 <?php require __DIR__ . '/includes/footer.php'; ?>

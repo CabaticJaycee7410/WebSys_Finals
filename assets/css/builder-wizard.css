@@ -1,0 +1,1091 @@
+.builder-wizard {
+    max-width: 1240px;
+    margin: 0 auto 45px;
+    color: #20352a;
+}
+.builder-wizard [hidden],.builder-screen[hidden] {
+    display: none !important;
+}
+.builder-wizard-heading,.builder-section-heading,.builder-step-actions,.builder-panel-heading,.builder-review-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+}
+.builder-wizard-heading {
+    margin: 25px 0;
+}
+.builder-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.builder-autosave-indicator {
+    color: #718078;
+    font-size: 11px;
+    white-space: nowrap;
+}
+.builder-wizard-heading h1,.builder-section-heading h2 {
+    margin: 4px 0 8px;
+    color: #193d2a;
+}
+.builder-wizard-heading p,.builder-section-heading p {
+    margin: 0;
+    color: #718078;
+}
+.builder-eyebrow {
+    color: #168653 !important;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+}
+.builder-exit-link {
+    color: #168653;
+    font-weight: 700;
+}
+.builder-progress {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 9px;
+    margin: 25px 0;
+}
+.builder-progress-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    border-bottom: 3px solid #dce7df;
+    color: #829087;
+    font-size: 13px;
+    font-weight: 700;
+}
+.builder-progress-step span {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #e8eee9;
+}
+.builder-progress-step.active,.builder-progress-step.completed {
+    border-color: #168653;
+    color: #176b40;
+}
+.builder-progress-step.active span,.builder-progress-step.completed span {
+    background: #168653;
+    color: white;
+}
+.builder-screen {
+    padding: 25px;
+    background: white;
+    border: 1px solid #e1eae4;
+    border-radius: 18px;
+    box-shadow: 0 8px 26px rgba(23,63,42,.06);
+}
+.builder-section-heading {
+    margin-bottom: 22px;
+}
+.bike-type-grid {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 12px;
+}
+.bike-type-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 9px;
+    min-height: 104px;
+    padding: 16px;
+    text-align: left;
+    background: #f8fbf9;
+    border: 1px solid #e1eae4;
+    border-radius: 13px;
+    color: #254332;
+    cursor: pointer;
+    transition: .18s;
+}
+.bike-type-card:hover,.bike-type-card.selected {
+    border-color: #168653;
+    background: #eef8f1;
+    box-shadow: 0 4px 13px rgba(22,134,83,.09);
+}
+.bike-type-icon {
+    font-size: 23px;
+}
+.bike-type-card strong {
+    font-size: 14px;
+}
+.bike-type-check {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: none;
+    color: #168653;
+    font-weight: 900;
+}
+.bike-type-card.selected .bike-type-check {
+    display: block;
+}
+.builder-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 15px;
+    margin-top: 24px;
+    padding: 20px;
+    background: #f7faf8;
+    border-radius: 13px;
+}
+.builder-details-grid label,.builder-live-search-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    color: #344d3d;
+    font-size: 13px;
+    font-weight: 700;
+}
+.builder-details-grid input,.builder-live-search-form input,.builder-live-search-form select {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid #d9e5dd;
+    border-radius: 8px;
+    background: white;
+    color: #20352a;
+    box-sizing: border-box;
+}
+.builder-details-grid input:focus,.builder-live-search-form input:focus,.builder-live-search-form select:focus {
+    outline: 2px solid #b8e0c8;
+    border-color: #168653;
+}
+.builder-step-actions {
+    margin-top: 22px;
+}
+.builder-note,.builder-hint {
+    color: #7b8980;
+    font-size: 12px;
+}
+.builder-primary-button,.builder-secondary-button,.builder-warning-button {
+    min-height: 42px;
+    padding: 11px 17px;
+    border: 0;
+    border-radius: 9px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .18s;
+}
+.builder-primary-button {
+    background: #168653;
+    color: white;
+}
+.builder-primary-button:hover {
+    background: #106b40;
+}
+.builder-primary-button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+.builder-secondary-button {
+    background: #edf3ef;
+    color: #315340;
+    border: 1px solid #dce8df;
+}
+.builder-secondary-button:hover {
+    background: #e0eee5;
+}
+.builder-warning-button {
+    background: #f2e5ca;
+    color: #735216;
+}
+.builder-full-button {
+    width: 100%;
+    margin-top: 10px;
+}
+.builder-message {
+    min-height: 20px;
+    color: #66766c;
+    font-size: 13px;
+}
+.builder-model-heading {
+    align-items: flex-start;
+}
+.builder-type-chip {
+    padding: 9px 13px;
+    background: #e8f5ed;
+    border-radius: 20px;
+    color: #176b40;
+    font-size: 13px;
+    font-weight: 700;
+}
+.builder-live-summary,.builder-review-summary {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.builder-live-summary>div,.builder-review-summary>div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 15px;
+    background: #f5f9f6;
+    border: 1px solid #e3ece5;
+    border-radius: 11px;
+}
+.builder-live-summary span,.builder-review-summary span {
+    color: #7a887f;
+    font-size: 12px;
+}
+.builder-live-summary strong,.builder-review-summary strong {
+    color: #176b40;
+    font-size: 19px;
+}
+.builder-workspace {
+    display: grid;
+    grid-template-columns: minmax(0,1.7fr) minmax(250px,.8fr);
+    gap: 18px;
+    align-items: start;
+}
+.builder-bike-panel,.builder-side-panel {
+    padding: 18px;
+    background: white;
+    border: 1px solid #e0e9e3;
+    border-radius: 14px;
+}
+.builder-panel-heading {
+    margin-bottom: 12px;
+}
+.builder-panel-heading h3,.builder-side-panel h3 {
+    margin: 0;
+    color: #254332;
+}
+.interactive-bike-canvas {
+    padding: 12px;
+    background: linear-gradient(150deg,#f6faf7,#eaf4ed);
+    border-radius: 13px;
+    overflow: hidden;
+}
+.interactive-bike-svg {
+    width: 100%;
+    height: auto;
+    min-height: 230px;
+}
+.bike-wheel-outer {
+    fill: none;
+    stroke: #303d35;
+    stroke-width: 9;
+}
+.bike-wheel-inner {
+    fill: none;
+    stroke: #9baaa0;
+    stroke-width: 2;
+}
+.bike-hub {
+    fill: #34483b;
+}
+.bike-spokes path {
+    fill: none;
+    stroke: #bdc9c0;
+    stroke-width: 1.4;
+}
+.bike-frame-lines path,.bike-frame-line {
+    fill: none;
+    stroke: url(#framePaint);
+    stroke-width: 10;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.bike-fork-line,.bike-stem-line,.bike-handlebar-line,.bike-seatpost-line,.bike-saddle-line,.bike-crank-arm,.bike-brake-line {
+    fill: none;
+    stroke: #48584e;
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+.bike-saddle-line {
+    stroke-width: 13;
+}
+.bike-hinge {
+    fill: #e8f5ed;
+    stroke: #176b40;
+    stroke-width: 5;
+}
+.bike-component-drawing.is-selected .bike-frame-line,
+.bike-component-drawing.is-selected .bike-fork-line,
+.bike-component-drawing.is-selected .bike-stem-line,
+.bike-component-drawing.is-selected .bike-handlebar-line,
+.bike-component-drawing.is-selected .bike-seatpost-line,
+.bike-component-drawing.is-selected .bike-saddle-line,
+.bike-component-drawing.is-selected .bike-crank-arm,
+.bike-component-drawing.is-selected .bike-chain-line,
+.bike-component-drawing.is-selected .bike-derailleur-line,
+.bike-component-drawing.is-selected .bike-brake-line {
+    stroke: #168653;
+    filter: drop-shadow(0 0 2px rgba(22,134,83,.25));
+}
+.bike-component-drawing.is-selected .bike-crank-ring {
+    stroke: #168653;
+}
+.interactive-bike-svg g[hidden],.bike-part-marker[hidden],.component-button[hidden] {
+    display: none !important;
+}
+.bike-crank-ring {
+    fill: none;
+    stroke: #48584e;
+    stroke-width: 6;
+}
+.bike-chain-line,.bike-derailleur-line {
+    fill: none;
+    stroke: #78877d;
+    stroke-width: 3;
+}
+.bike-part-marker {
+    cursor: pointer;
+    outline: none;
+}
+.bike-marker-circle {
+    fill: white;
+    stroke: #168653;
+    stroke-width: 3;
+    transition: .15s;
+}
+.bike-marker-text {
+    fill: #176b40;
+    font-size: 12px;
+    font-weight: 900;
+    text-anchor: middle;
+    pointer-events: none;
+}
+.bike-part-marker:hover .bike-marker-circle,.bike-part-marker:focus .bike-marker-circle,.bike-part-marker.active .bike-marker-circle {
+    fill: #168653;
+    stroke: #0e5e38;
+    r: 16;
+}
+.bike-part-marker:hover .bike-marker-text,.bike-part-marker:focus .bike-marker-text,.bike-part-marker.active .bike-marker-text {
+    fill: white;
+}
+.bike-part-marker.has-part .bike-marker-circle {
+    fill: #168653;
+    stroke: #0e5e38;
+}
+.bike-part-marker.has-part .bike-marker-text {
+    fill: white;
+}
+.bike-marker-warning {
+    display: none;
+    fill: #e8a027;
+    stroke: white;
+    stroke-width: 1.5;
+}
+.bike-marker-warning-text {
+    display: none;
+    fill: white;
+    font-size: 10px;
+    font-weight: 900;
+    text-anchor: middle;
+}
+.bike-part-marker.has-fit-warning .bike-marker-warning,.bike-part-marker.has-fit-warning .bike-marker-warning-text {
+    display: block;
+}
+.builder-model-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 12px 2px;
+    color: #748278;
+    font-size: 11px;
+}
+.legend-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 5px;
+    border-radius: 50%;
+}
+.legend-selected {
+    background: #168653;
+}
+.legend-empty {
+    background: white;
+    border: 1px solid #168653;
+}
+.legend-warning {
+    background: #e8a027;
+}
+.component-list-title {
+    margin: 10px 0;
+    color: #274634;
+}
+.builder-component-list {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 8px;
+}
+.builder-component-list .component-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    padding: 10px;
+    text-align: left;
+    background: #f8fbf9;
+    border: 1px solid #e1eae4;
+    border-radius: 8px;
+    color: #365342;
+    cursor: pointer;
+}
+.builder-component-list .component-button small {
+    color: #7a8a80;
+    white-space: nowrap;
+    font-size: 10px;
+}
+.builder-component-list .component-button.has-part {
+    border-color: #8dc7a1;
+    background: #eef8f1;
+}
+.builder-component-list .component-button.active {
+    outline: 2px solid #168653;
+}
+.builder-side-panel {
+    position: sticky;
+    top: 18px;
+}
+.model-selected-parts {
+    display: grid;
+    gap: 8px;
+    margin: 15px 0;
+}
+.model-selected-part {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px;
+    background: #f7faf8;
+    border-radius: 8px;
+    font-size: 12px;
+}
+.model-selected-part-details {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+}
+.model-selected-part-details span {
+    color: #294735;
+    font-weight: 750;
+}
+.model-selected-part-details small {
+    overflow: hidden;
+    color: #75847a;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.model-selected-part-details .selected-part-warning {
+    color: #9b6718;
+    white-space: normal;
+}
+.selected-part-remove {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 6px;
+    background: #fff0f0;
+    color: #b52d3b;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+.model-selected-part strong {
+    color: #176b40;
+    white-space: nowrap;
+}
+.builder-side-total {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid #e1eae4;
+    color: #6e7e73;
+    font-size: 13px;
+}
+.builder-side-total strong {
+    color: #176b40;
+    font-size: 17px;
+}
+.builder-empty-note {
+    padding: 15px;
+    color: #7d8b82;
+    background: #f7faf8;
+    border-radius: 9px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.builder-search-selected {
+    margin: 20px 0;
+}
+.builder-live-search-form {
+    display: grid;
+    gap: 12px;
+    max-width: 780px;
+    padding: 20px;
+    background: #f7faf8;
+    border: 1px solid #e2ebe4;
+    border-radius: 13px;
+}
+.builder-filter-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    color: #304b3a;
+}
+.builder-filter-heading span {
+    color: #7c8980;
+    font-size: 12px;
+}
+.builder-filter-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+.builder-filter-tab {
+    padding: 11px;
+    border: 1px solid #dce8df;
+    border-radius: 8px;
+    background: white;
+    color: #47614f;
+    font-weight: 700;
+    cursor: pointer;
+}
+.builder-filter-tab.active {
+    background: #e8f5ed;
+    border-color: #168653;
+    color: #176b40;
+}
+.builder-filter-panel {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    background: white;
+    border: 1px solid #e3ece5;
+    border-radius: 9px;
+}
+.compatibility-filter-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 13px 16px;
+    margin: 14px 0;
+    background: #eaf6ee;
+    border: 1px solid #bfe1ca;
+    border-radius: 10px;
+    color: #176b40;
+    font-size: 13px;
+}
+.compatibility-filter-banner label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.builder-results-toolbar {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0 8px;
+}
+.builder-results-toolbar label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #52655a;
+    font-size: 12px;
+    font-weight: 700;
+}
+.builder-results-toolbar select {
+    min-width: 175px;
+    padding: 9px 11px;
+    border: 1px solid #dce8df;
+    border-radius: 8px;
+    background: #fff;
+    color: #365342;
+}
+.component-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.component-list-heading > span {
+    color: #78877e;
+    font-size: 11px;
+}
+.builder-search-status {
+    min-height: 22px;
+    margin: 14px 0;
+    color: #6d7d72;
+    font-size: 13px;
+}
+.builder-product-results {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 14px;
+}
+.live-product-card {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid #e0e9e3;
+    border-radius: 12px;
+    background: white;
+}
+.live-product-card img,.builder-product-placeholder {
+    width: 120px;
+    min-width: 120px;
+    height: 125px;
+    object-fit: contain;
+    background: #f7faf8;
+    border-radius: 9px;
+}
+.builder-product-placeholder {
+    display: grid;
+    place-items: center;
+    color: #87948b;
+    font-size: 12px;
+}
+.live-product-details {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+}
+.live-product-details h3 {
+    margin: 0;
+    color: #263f30;
+    font-size: 14px;
+    line-height: 1.4;
+}
+.live-product-details p {
+    margin: 0;
+    color: #79867e;
+    font-size: 11px;
+}
+.live-product-price {
+    color: #168653;
+    font-size: 18px;
+}
+.live-product-link {
+    color: #168653;
+    font-size: 11px;
+}
+.live-product-details .builder-primary-button {
+    margin-top: auto;
+}
+.confirm-product-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    max-width: 780px;
+    padding: 20px;
+    background: #f7faf8;
+    border: 1px solid #e1eae4;
+    border-radius: 13px;
+}
+.confirm-product-card img {
+    width: 155px;
+    height: 155px;
+    object-fit: contain;
+    background: white;
+    border-radius: 10px;
+}
+.confirm-product-card h3 {
+    margin: 0 0 10px;
+}
+.confirm-product-card p {
+    color: #77847b;
+    font-size: 13px;
+}
+.compatibility-warning {
+    max-width: 780px;
+    padding: 18px;
+    margin-top: 16px;
+    background: #fff8e8;
+    border: 1px solid #e9c66d;
+    border-left: 5px solid #e4a52c;
+    border-radius: 12px;
+}
+.compatibility-warning h3 {
+    margin-top: 0;
+    color: #875b0c;
+}
+.compatibility-warning li {
+    margin: 9px 0;
+    line-height: 1.5;
+}
+.compatibility-review-note {
+    max-width: 780px;
+    padding: 14px 17px;
+    margin-top: 15px;
+    background: #f2f5f3;
+    border-radius: 10px;
+    color: #68766d;
+    font-size: 13px;
+}
+.compatibility-review-note p {
+    margin-bottom: 0;
+}
+.builder-review-summary {
+    grid-template-columns: repeat(4,1fr);
+}
+.builder-review-heading {
+    margin: 25px 0 12px;
+}
+.builder-review-heading h3 {
+    margin: 0;
+}
+.builder-review-heading span {
+    color: #7b8980;
+    font-size: 12px;
+}
+.builder-review-parts {
+    display: grid;
+    gap: 10px;
+}
+.builder-review-part {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px;
+    border: 1px solid #e1eae4;
+    border-radius: 11px;
+    background: white;
+}
+.builder-review-part img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    background: #f7faf8;
+    border-radius: 8px;
+}
+.builder-review-part-details {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+.builder-review-part-details span {
+    color: #748178;
+    font-size: 12px;
+}
+.builder-review-part-details b {
+    color: #168653;
+}
+.review-fit-warning {
+    color: #98640e;
+}
+.review-fit-note {
+    color: #758078;
+}
+.review-remove-button {
+    padding: 8px 11px;
+    border: 0;
+    border-radius: 7px;
+    background: #fff0f0;
+    color: #b52d3b;
+    cursor: pointer;
+}
+.builder-budget-message {
+    padding: 13px 15px;
+    background: #f1f7f2;
+    border-radius: 9px;
+    color: #176b40;
+    font-size: 13px;
+}
+.builder-budget-message.over-budget {
+    background: #fff4e8;
+    color: #9a5c16;
+}
+.builder-save-actions {
+    justify-content: flex-end;
+}
+@media (max-width:950px) {
+    .bike-type-grid {
+        grid-template-columns: repeat(3,minmax(0,1fr));
+    }
+    .builder-workspace {
+        grid-template-columns: 1fr;
+    }
+    .builder-side-panel {
+        position: static;
+    }
+    .builder-product-results {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width:650px) {
+    .builder-screen {
+        padding: 15px;
+    }
+    .builder-progress-step {
+        justify-content: center;
+        padding: 8px 3px;
+        font-size: 0;
+    }
+    .builder-progress-step span {
+        font-size: 12px;
+    }
+    .bike-type-grid {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .builder-details-grid,.builder-live-summary,.builder-review-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+    .builder-component-list {
+        grid-template-columns: repeat(2,minmax(0,1fr));
+    }
+    .builder-wizard-heading,.builder-section-heading,.builder-step-actions,.builder-heading-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .builder-step-actions>button {
+        width: 100%;
+    }
+    .live-product-card {
+        flex-direction: column;
+    }
+    .live-product-card img,.builder-product-placeholder {
+        width: 100%;
+        height: 165px;
+    }
+    .confirm-product-card {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .confirm-product-card img {
+        width: 100%;
+    }
+    .builder-review-part {
+        flex-wrap: wrap;
+    }
+    .review-remove-button {
+        margin-left: auto;
+    }
+}
+@media (max-width:420px) {
+    .builder-details-grid,.builder-live-summary,.builder-review-summary {
+        grid-template-columns: 1fr;
+    }
+    .builder-model-legend {
+        gap: 8px;
+    }
+}
+
+/* Builder updates: autosave, selected part highlighting, and result controls */
+.builder-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.builder-autosave-indicator {
+    color: #718078;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.bike-component-drawing.is-selected .bike-frame-line,
+.bike-component-drawing.is-selected .bike-fork-line,
+.bike-component-drawing.is-selected .bike-stem-line,
+.bike-component-drawing.is-selected .bike-handlebar-line,
+.bike-component-drawing.is-selected .bike-seatpost-line,
+.bike-component-drawing.is-selected .bike-saddle-line,
+.bike-component-drawing.is-selected .bike-crank-arm,
+.bike-component-drawing.is-selected .bike-chain-line,
+.bike-component-drawing.is-selected .bike-derailleur-line,
+.bike-component-drawing.is-selected .bike-brake-line {
+    stroke: #168653;
+    filter: drop-shadow(0 0 2px rgba(22, 134, 83, .25));
+}
+
+.bike-component-drawing.is-selected .bike-crank-ring {
+    stroke: #168653;
+}
+
+.interactive-bike-svg > g[data-component].is-selected .bike-wheel-outer {
+    stroke: #168653;
+}
+
+.interactive-bike-svg g[hidden],
+.bike-part-marker[hidden],
+.component-button[hidden] {
+    display: none !important;
+}
+
+.bike-hinge {
+    fill: #e8f5ed;
+    stroke: #176b40;
+    stroke-width: 5;
+}
+
+.component-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.component-list-heading > span {
+    color: #78877e;
+    font-size: 11px;
+}
+
+.model-selected-part {
+    align-items: center;
+}
+
+.model-selected-part-details {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.model-selected-part-details span {
+    color: #294735;
+    font-weight: 750;
+}
+
+.model-selected-part-details small {
+    overflow: hidden;
+    color: #75847a;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.model-selected-part-details .selected-part-warning {
+    color: #9b6718;
+    white-space: normal;
+}
+
+.selected-part-remove {
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 6px;
+    background: #fff0f0;
+    color: #b52d3b;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.builder-results-toolbar {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 18px 0 8px;
+}
+
+.builder-results-toolbar label {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #52655a;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.builder-results-toolbar select {
+    min-width: 175px;
+    padding: 9px 11px;
+    border: 1px solid #dce8df;
+    border-radius: 8px;
+    background: #fff;
+    color: #365342;
+}
+
+@media (max-width: 650px) {
+    .builder-heading-actions {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .builder-autosave-indicator {
+        white-space: normal;
+    }
+
+    .builder-results-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .builder-results-toolbar label {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .builder-results-toolbar select {
+        width: 100%;
+    }
+}
+
+.bike-detail-shape {
+    fill: #eaf2ec;
+    stroke: #48584e;
+    stroke-width: 5;
+}
+.bike-detail-line {
+    fill: none;
+    stroke: #48584e;
+    stroke-width: 6;
+    stroke-linecap: round;
+}
+.bike-component-drawing.is-selected .bike-detail-shape,
+.bike-component-drawing.is-selected .bike-detail-line {
+    stroke: #168653;
+}
+
+.marketplace-connection-note {
+    margin: 8px 0 14px;
+    padding: 10px 13px;
+    border: 1px solid #ead7b4;
+    border-radius: 9px;
+    background: #fff8eb;
+    color: #8b641f;
+    font-size: 12px;
+}
+.marketplace-connection-note.is-ready {
+    border-color: #c6e4cf;
+    background: #eff8f1;
+    color: #176b40;
+}
+.marketplace-connection-note.is-offline {
+    border-color: #ead7b4;
+    background: #fff8eb;
+    color: #8b641f;
+}
+
+.model-selected-part-image {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    object-fit: contain;
+    border-radius: 7px;
+    background: #fff;
+}
