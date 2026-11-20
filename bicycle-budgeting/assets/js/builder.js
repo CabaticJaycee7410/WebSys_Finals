@@ -9,14 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const draftKey = `bicycle-builder-draft:${config.userId || 'user'}:${config.projectId || 'new'}`;
     const money = value => '₱' + Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const allowedComponents = (type = bikeType()) => componentMap[type] || Object.keys(components);
-    let restoredDraft = null;
 
     try {
-        restoredDraft = JSON.parse(localStorage.getItem(draftKey) || 'null');
+        localStorage.removeItem(draftKey);
     } catch (_) {}
 
-    const draft = { ...(initial.parts || {}), ...((restoredDraft && restoredDraft.parts) || {}) };
-    let selectedBicycleId = Number(restoredDraft && restoredDraft.bicycleId ? restoredDraft.bicycleId : initial.bicycleId || 0);
+    const draft = { ...(initial.parts || {}) };
+    let selectedBicycleId = Number(initial.bicycleId || 0);
     let activeComponent = '';
     let pendingProduct = null;
     let compatibilityResult = null;
@@ -1073,11 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     ['bicycleName', 'buildName', 'bikeBrand', 'bikeModel', 'targetBudget'].forEach(id => {
-        const restoredValue = restoredDraft
-            ? id === 'targetBudget' ? restoredDraft.budget : restoredDraft[id]
-            : undefined;
-
-        $(id).value = restoredValue !== undefined ? restoredValue : fieldDefaults[id];
+        $(id).value = fieldDefaults[id];
 
         $(id).addEventListener('input', () => {
             if (id === 'targetBudget') updateSummary();
@@ -1122,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const selectedType = (restoredDraft && restoredDraft.bikeType) || initial.bikeType || '';
+    const selectedType = initial.bikeType || '';
 
     if (selectedType) setBikeType(selectedType);
 
@@ -1134,5 +1129,5 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSummary();
     saveDraftLocally();
     checkMarketplaceStatus();
-    showStep(config.projectId || selectedType ? 'model' : 'type');
+    showStep('type');
 });
