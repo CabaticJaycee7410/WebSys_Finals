@@ -42,6 +42,7 @@ $bicycleId = max(0, (int)(isset($input['bicycleId']) ? $input['bicycleId'] : 0))
 $type = trim((string)(isset($input['bicycleType']) ? $input['bicycleType'] : ''));
 $brand = trim((string)(isset($input['bicycleBrand']) ? $input['bicycleBrand'] : ''));
 $model = trim((string)(isset($input['bicycleModel']) ? $input['bicycleModel'] : ''));
+$bicycleName = trim((string)(isset($input['bicycleName']) ? $input['bicycleName'] : ''));
 $name = trim((string)(isset($input['buildName']) ? $input['buildName'] : ''));
 $budget = filter_var(isset($input['budget']) ? $input['budget'] : 0, FILTER_VALIDATE_FLOAT);
 $parts = isset($input['parts']) ? $input['parts'] : array();
@@ -54,24 +55,41 @@ $allowedTypes = array(
 );
 
 $components = array(
-    'frame' => 'Frame', 'fork' => 'Fork', 'handlebar' => 'Handlebar', 'stem' => 'Stem',
-    'headset' => 'Headset', 'grips' => 'Grips', 'saddle' => 'Saddle', 'seatpost' => 'Seatpost',
-    'wheelset' => 'Wheelset', 'front_tire' => 'Front Tire', 'rear_tire' => 'Rear Tire',
-    'crankset' => 'Crankset', 'bottom_bracket' => 'Bottom Bracket', 'pedals' => 'Pedals',
-    'chain' => 'Chain', 'cassette' => 'Cassette / Rear Cog', 'shifter' => 'Shifter',
-    'front_derailleur' => 'Front Derailleur', 'rear_derailleur' => 'Rear Derailleur',
-    'front_brake' => 'Front Brake', 'rear_brake' => 'Rear Brake',
-    'motor' => 'Electric Motor', 'battery' => 'Battery',
-    'controller' => 'Controller / Display', 'cargo_rack' => 'Cargo Rack'
+    'frame' => 'Frame',
+    'fork' => 'Fork',
+    'handlebar' => 'Handlebar',
+    'stem' => 'Stem',
+    'headset' => 'Headset',
+    'grips' => 'Grips',
+    'saddle' => 'Saddle',
+    'seatpost' => 'Seatpost',
+    'wheelset' => 'Wheelset',
+    'front_tire' => 'Front Tire',
+    'rear_tire' => 'Rear Tire',
+    'crankset' => 'Crankset',
+    'bottom_bracket' => 'Bottom Bracket',
+    'pedals' => 'Pedals',
+    'chain' => 'Chain',
+    'cassette' => 'Cassette / Rear Cog',
+    'shifter' => 'Shifter',
+    'front_derailleur' => 'Front Derailleur',
+    'rear_derailleur' => 'Rear Derailleur',
+    'front_brake' => 'Front Brake',
+    'rear_brake' => 'Rear Brake',
+    'motor' => 'Electric Motor',
+    'battery' => 'Battery',
+    'controller' => 'Controller / Display',
+    'cargo_rack' => 'Cargo Rack'
 );
 
 if (!in_array($type, $allowedTypes, true)) {
     save_reply(array('success' => false, 'message' => 'Choose a valid bicycle type.'), 422);
 }
 
+if ($bicycleName === '') $bicycleName = $type;
 if ($name === '') $name = $type . ' Build';
 
-if (strlen($name) > 150 || strlen($brand) > 120 || strlen($model) > 120) {
+if (strlen($bicycleName) > 150 || strlen($name) > 150 || strlen($brand) > 120 || strlen($model) > 120) {
     save_reply(array('success' => false, 'message' => 'One of the bicycle details is too long.'), 422);
 }
 
@@ -101,6 +119,7 @@ try {
         if ($bicycleId > 0) {
             $stmt = $pdo->prepare('SELECT bicycle_id FROM bicycles WHERE bicycle_id = ? AND user_id = ? LIMIT 1');
             $stmt->execute(array($bicycleId, $userId));
+
             if (!$stmt->fetch()) {
                 $pdo->rollBack();
                 save_reply(array('success' => false, 'message' => 'The selected bicycle was not found in your account.'), 422);
@@ -110,9 +129,25 @@ try {
         }
 
         if ($bicycleId <= 0) {
-            $stmt = $pdo->prepare('INSERT INTO bicycles (user_id, bicycle_name, bicycle_type, brand) VALUES (?, ?, ?, ?)');
-            $stmt->execute(array($userId, $name, $type, $brand !== '' ? $brand : null));
+            $stmt = $pdo->prepare('INSERT INTO bicycles (user_id, bicycle_name, bicycle_type, brand, model) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute(array(
+                $userId,
+                $bicycleName,
+                $type,
+                $brand !== '' ? $brand : null,
+                $model !== '' ? $model : null
+            ));
             $bicycleId = (int)$pdo->lastInsertId();
+        } else {
+            $stmt = $pdo->prepare('UPDATE bicycles SET bicycle_name = ?, bicycle_type = ?, brand = ?, model = ? WHERE bicycle_id = ? AND user_id = ?');
+            $stmt->execute(array(
+                $bicycleName,
+                $type,
+                $brand !== '' ? $brand : null,
+                $model !== '' ? $model : null,
+                $bicycleId,
+                $userId
+            ));
         }
 
         $stmt = $pdo->prepare('UPDATE projects SET bicycle_id = ?, project_name = ?, budget_amount = ? WHERE project_id = ? AND user_id = ?');
@@ -121,13 +156,30 @@ try {
         if ($bicycleId > 0) {
             $stmt = $pdo->prepare('SELECT bicycle_id FROM bicycles WHERE bicycle_id = ? AND user_id = ? LIMIT 1');
             $stmt->execute(array($bicycleId, $userId));
+
             if (!$stmt->fetch()) {
                 $pdo->rollBack();
                 save_reply(array('success' => false, 'message' => 'The selected bicycle was not found in your account.'), 422);
             }
+
+            $stmt = $pdo->prepare('UPDATE bicycles SET bicycle_name = ?, bicycle_type = ?, brand = ?, model = ? WHERE bicycle_id = ? AND user_id = ?');
+            $stmt->execute(array(
+                $bicycleName,
+                $type,
+                $brand !== '' ? $brand : null,
+                $model !== '' ? $model : null,
+                $bicycleId,
+                $userId
+            ));
         } else {
-            $stmt = $pdo->prepare('INSERT INTO bicycles (user_id, bicycle_name, bicycle_type, brand) VALUES (?, ?, ?, ?)');
-            $stmt->execute(array($userId, $name, $type, $brand !== '' ? $brand : null));
+            $stmt = $pdo->prepare('INSERT INTO bicycles (user_id, bicycle_name, bicycle_type, brand, model) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute(array(
+                $userId,
+                $bicycleName,
+                $type,
+                $brand !== '' ? $brand : null,
+                $model !== '' ? $model : null
+            ));
             $bicycleId = (int)$pdo->lastInsertId();
         }
 
@@ -137,7 +189,13 @@ try {
     }
 
     $stmt = $pdo->prepare('INSERT INTO builder_plans (project_id, bicycle_type, bicycle_brand, bicycle_model, build_name) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE bicycle_type = VALUES(bicycle_type), bicycle_brand = VALUES(bicycle_brand), bicycle_model = VALUES(bicycle_model), build_name = VALUES(build_name)');
-    $stmt->execute(array($projectId, $type, $brand !== '' ? $brand : null, $model !== '' ? $model : null, $name));
+    $stmt->execute(array(
+        $projectId,
+        $type,
+        $brand !== '' ? $brand : null,
+        $model !== '' ? $model : null,
+        $name
+    ));
 
     $stmt = $pdo->prepare('DELETE FROM project_build_parts WHERE project_id = ?');
     $stmt->execute(array($projectId));
@@ -150,39 +208,76 @@ try {
 
     foreach ($parts as $part) {
         if (!is_array($part)) continue;
+
         $key = trim((string)(isset($part['component_key']) ? $part['component_key'] : ''));
         $title = trim((string)(isset($part['title']) ? $part['title'] : ''));
+
         if (!isset($components[$key]) || $title === '' || isset($savedKeys[$key])) continue;
+
         $savedKeys[$key] = true;
+
         $price = filter_var(isset($part['price']) ? $part['price'] : 0, FILTER_VALIDATE_FLOAT);
         if ($price === false || $price < 0 || $price > 999999999) $price = 0;
+
         $compatibility = isset($part['compatibility']) ? $part['compatibility'] : array();
         if (!is_array($compatibility)) $compatibility = array();
+
         $compatibilityJson = json_encode($compatibility, JSON_UNESCAPED_UNICODE);
         if ($compatibilityJson === false || strlen($compatibilityJson) > 10000) $compatibilityJson = '{}';
+
         $status = (string)(isset($part['compatibility_status']) ? $part['compatibility_status'] : 'needs_review');
         if (!in_array($status, array('compatible', 'needs_review', 'incompatible'), true)) $status = 'needs_review';
+
         $source = substr(trim((string)(isset($part['source']) ? $part['source'] : 'Lazada')), 0, 50);
         if ($source === '') $source = 'Lazada';
+
         $itemId = substr(trim((string)(isset($part['item_id']) ? $part['item_id'] : '')), 0, 100);
         $skuId = substr(trim((string)(isset($part['sku_id']) ? $part['sku_id'] : '')), 0, 100);
+
         $image = clean_product_url(isset($part['image']) ? $part['image'] : '');
         $link = clean_product_url(isset($part['url']) ? $part['url'] : '');
+
         $brandValue = substr(trim((string)(isset($part['brand']) ? $part['brand'] : '')), 0, 120);
         if ($brandValue === '') $brandValue = null;
+
         $productTitle = substr($title, 0, 255);
         $label = $components[$key];
         $forced = !empty($part['forced_incompatible']) && $status === 'incompatible' ? 1 : 0;
+
         $insert->execute(array(
-            $projectId, $key, $label, $productTitle, $brandValue, $price,
-            $image, $link, $source, $itemId !== '' ? $itemId : null,
-            $skuId !== '' ? $skuId : null, $compatibilityJson, $status, $forced
+            $projectId,
+            $key,
+            $label,
+            $productTitle,
+            $brandValue,
+            $price,
+            $image,
+            $link,
+            $source,
+            $itemId !== '' ? $itemId : null,
+            $skuId !== '' ? $skuId : null,
+            $compatibilityJson,
+            $status,
+            $forced
         ));
+
         if ($itemId !== '') {
             $catalog->execute(array(
-                $userId, $key, $productTitle, $brandValue, $price, $image,
-                $link, $source, $itemId, $skuId !== '' ? $skuId : null,
-                $compatibilityJson, $userId, $source, $itemId, $skuId
+                $userId,
+                $key,
+                $productTitle,
+                $brandValue,
+                $price,
+                $image,
+                $link,
+                $source,
+                $itemId,
+                $skuId !== '' ? $skuId : null,
+                $compatibilityJson,
+                $userId,
+                $source,
+                $itemId,
+                $skuId
             ));
         }
     }

@@ -2,6 +2,7 @@
 <?php
 require_once __DIR__ . '/../includes/functions.php';
 require_login();
+
 $pageTitle = 'Bicycle Builder';
 $pdo = require __DIR__ . '/../config/database.php';
 $userId = current_user_id();
@@ -9,6 +10,7 @@ $projectId = max(0, (int)(isset($_GET['project_id']) ? $_GET['project_id'] : 0))
 $project = null;
 $initialParts = array();
 $bicycles = array();
+
 $stmt = $pdo->prepare('SELECT bicycle_id, bicycle_name, bicycle_type, brand, model FROM bicycles WHERE user_id = ? ORDER BY created_at DESC');
 $stmt->execute(array($userId));
 $bicycles = $stmt->fetchAll();
@@ -20,7 +22,7 @@ if ($projectId > 0) {
 
     if (!$project) {
         set_flash('error', 'Build plan not found.');
-        redirect('projects.php');
+        redirect('bicycles.php');
     }
 
     $stmt = $pdo->prepare('SELECT * FROM project_build_parts WHERE project_id = ? ORDER BY component_label');
@@ -28,6 +30,7 @@ if ($projectId > 0) {
 
     foreach ($stmt->fetchAll() as $part) {
         $compatibility = json_decode((string)$part['compatibility_json'], true);
+
         $initialParts[$part['component_key']] = array(
             'component_key' => $part['component_key'],
             'component_label' => $part['component_label'],
@@ -99,12 +102,27 @@ $markers = array(
 );
 
 $bikeTypes = array(
-    'Mountain Bike', 'BMX', 'Road Bike', 'Gravel Bike',
-    'Hybrid Bike', 'Commuter Bike', 'City Bike', 'Touring Bike',
-    'Folding Bike', 'Fat Bike', 'Track / Fixed Gear',
-    'Cyclocross Bike', 'Downhill Bike', 'Enduro Bike',
-    'Cross-Country Bike', 'Electric Bike', 'Cargo Bike',
-    'Tandem Bike', 'Recumbent Bike', "Kids' Bike", 'Custom Build'
+    'Mountain Bike',
+    'BMX',
+    'Road Bike',
+    'Gravel Bike',
+    'Hybrid Bike',
+    'Commuter Bike',
+    'City Bike',
+    'Touring Bike',
+    'Folding Bike',
+    'Fat Bike',
+    'Track / Fixed Gear',
+    'Cyclocross Bike',
+    'Downhill Bike',
+    'Enduro Bike',
+    'Cross-Country Bike',
+    'Electric Bike',
+    'Cargo Bike',
+    'Tandem Bike',
+    'Recumbent Bike',
+    "Kids' Bike",
+    'Custom Build'
 );
 
 $optionalComponents = array('motor', 'battery', 'controller', 'cargo_rack');
@@ -119,6 +137,7 @@ foreach ($bikeTypes as $type) {
 $basicCityComponents = array_values(array_diff($baseComponents, array('front_derailleur')));
 $downhillComponents = array_values(array_diff($baseComponents, array('front_derailleur')));
 $kidsComponents = array_values(array_diff($baseComponents, array('front_derailleur', 'rear_derailleur')));
+
 $bikeComponentMap['BMX'] = $singleSpeedComponents;
 $bikeComponentMap['Track / Fixed Gear'] = $singleSpeedComponents;
 $bikeComponentMap['City Bike'] = $basicCityComponents;
@@ -134,6 +153,7 @@ $bikeComponentMap['Custom Build'] = array_keys($components);
 $initial = array(
     'projectId' => $projectId,
     'bicycleId' => isset($project['saved_bicycle_id']) ? (int)$project['saved_bicycle_id'] : 0,
+    'bicycleName' => isset($project['bicycle_name']) ? $project['bicycle_name'] : '',
     'projectName' => isset($project['build_name']) ? $project['build_name'] : (isset($project['project_name']) ? $project['project_name'] : ''),
     'budget' => (float)(isset($project['budget_amount']) ? $project['budget_amount'] : 0),
     'bikeType' => isset($project['plan_bicycle_type']) ? $project['plan_bicycle_type'] : (isset($project['saved_bicycle_type']) ? $project['saved_bicycle_type'] : ''),
@@ -144,6 +164,7 @@ $initial = array(
 
 require __DIR__ . '/../includes/header.php';
 ?>
+
 <div class="builder-wizard" id="builderWizard">
     <div class="builder-wizard-heading">
         <div>
@@ -153,9 +174,10 @@ require __DIR__ . '/../includes/header.php';
         </div>
         <div class="builder-heading-actions">
             <span class="builder-autosave-indicator" id="draftSaveStatus">Draft saved locally</span>
-            <a class="builder-exit-link" href="<?= h(url('dashboard.php')) ?>">Back to Dashboard</a>
+            <a class="builder-exit-link" href="<?= h(url('bicycles.php')) ?>">Back to My Garage</a>
         </div>
     </div>
+
     <div class="builder-progress">
         <div class="builder-progress-step active" data-progress="type"><span>1</span> Bike</div>
         <div class="builder-progress-step" data-progress="model"><span>2</span> Build</div>
@@ -163,6 +185,7 @@ require __DIR__ . '/../includes/header.php';
         <div class="builder-progress-step" data-progress="confirm"><span>4</span> Confirm</div>
         <div class="builder-progress-step" data-progress="review"><span>5</span> Save</div>
     </div>
+
     <section class="builder-screen active" id="step-type" data-step="type">
         <div class="builder-section-heading">
             <div>
@@ -171,19 +194,28 @@ require __DIR__ . '/../includes/header.php';
                 <p>Choose an existing bicycle or select a type for a new build.</p>
             </div>
         </div>
+
         <div class="builder-details-grid">
             <label>
                 Select an Existing Bicycle (Optional)
                 <select id="savedBicycle">
                     <option value="">Create a new bicycle build</option>
                     <?php foreach ($bicycles as $bicycle): ?>
-                        <option value="<?= (int)$bicycle['bicycle_id'] ?>" data-type="<?= h($bicycle['bicycle_type']) ?>" data-brand="<?= h($bicycle['brand']) ?>" data-model="<?= h($bicycle['model']) ?>" data-name="<?= h($bicycle['bicycle_name']) ?>" <?= isset($initial['bicycleId']) && $initial['bicycleId'] == $bicycle['bicycle_id'] ? 'selected' : '' ?>>
+                        <option
+                            value="<?= (int)$bicycle['bicycle_id'] ?>"
+                            data-type="<?= h($bicycle['bicycle_type']) ?>"
+                            data-brand="<?= h($bicycle['brand']) ?>"
+                            data-model="<?= h($bicycle['model']) ?>"
+                            data-name="<?= h($bicycle['bicycle_name']) ?>"
+                            <?= isset($initial['bicycleId']) && $initial['bicycleId'] == $bicycle['bicycle_id'] ? 'selected' : '' ?>
+                        >
                             <?= h($bicycle['bicycle_name']) ?> - <?= h($bicycle['bicycle_type']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
             </label>
         </div>
+
         <div class="bike-type-grid" id="bikeTypeGrid">
             <?php foreach ($bikeTypes as $type): ?>
                 <button type="button" class="bike-type-card" data-bike-type="<?= h($type) ?>">
@@ -193,10 +225,15 @@ require __DIR__ . '/../includes/header.php';
                 </button>
             <?php endforeach; ?>
         </div>
+
         <div class="builder-details-grid">
             <label>
+                Bicycle Name
+                <input type="text" id="bicycleName" maxlength="150" placeholder="Example: My Dream Bike">
+            </label>
+            <label>
                 Build Plan Name
-                <input type="text" id="buildName" maxlength="150" placeholder="Example: My First Mountain Bike">
+                <input type="text" id="buildName" maxlength="150" placeholder="Example: Mountain Bike Upgrade">
             </label>
             <label>
                 Bicycle Brand (Optional)
@@ -223,12 +260,14 @@ require __DIR__ . '/../includes/header.php';
                 <input type="number" id="targetBudget" min="0" step="0.01" placeholder="Example: 15000">
             </label>
         </div>
+
         <div class="builder-step-actions">
             <span class="builder-note">You can edit these details later. This is a planning tool, not a checkout page.</span>
             <button type="button" class="builder-primary-button" id="toBikeModel">Continue to Bicycle Builder</button>
         </div>
         <p class="builder-message" id="typeMessage" role="status"></p>
     </section>
+
     <section class="builder-screen" id="step-model" data-step="model" hidden>
         <div class="builder-section-heading builder-model-heading">
             <div>
@@ -238,17 +277,20 @@ require __DIR__ . '/../includes/header.php';
             </div>
             <div class="builder-type-chip" id="selectedBikeType"></div>
         </div>
+
         <div class="builder-live-summary">
             <div><span>Selected Parts</span><strong id="modelPartCount">0</strong></div>
             <div><span>Estimated Build Cost</span><strong id="modelPartTotal">₱0.00</strong></div>
             <div><span>Target Budget</span><strong id="modelTargetBudget">Not set</strong></div>
         </div>
+
         <div class="builder-workspace">
             <div class="builder-bike-panel">
                 <div class="builder-panel-heading">
                     <h3 id="bikeDiagramLabel">Your 2D Bicycle</h3>
                     <span class="builder-hint">Green markers show selected components. Amber markers need a fit check.</span>
                 </div>
+
                 <div class="interactive-bike-canvas">
                     <svg id="interactiveBikeSvg" viewBox="0 0 700 390" class="bike-svg interactive-bike-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive bicycle model">
                         <defs>
@@ -348,15 +390,18 @@ require __DIR__ . '/../includes/header.php';
                         <?php endforeach; ?>
                     </svg>
                 </div>
+
                 <div class="builder-model-legend">
                     <span><i class="legend-dot legend-selected"></i> Part selected</span>
                     <span><i class="legend-dot legend-empty"></i> Not selected</span>
                     <span><i class="legend-dot legend-warning"></i> Check fit</span>
                 </div>
+
                 <div class="component-list-heading">
                     <h3 class="component-list-title">Components for this bicycle</h3>
                     <span id="componentTypeNote">The list changes based on bicycle type.</span>
                 </div>
+
                 <div class="component-list builder-component-list" id="builderComponentList">
                     <?php foreach ($components as $key => $label): ?>
                         <button type="button" class="component-button" data-component="<?= h($key) ?>">
@@ -365,8 +410,10 @@ require __DIR__ . '/../includes/header.php';
                         </button>
                     <?php endforeach; ?>
                 </div>
+
                 <p class="builder-message" id="modelMessage" role="status"></p>
             </div>
+
             <aside class="builder-side-panel">
                 <h3>Your Current Build</h3>
                 <p class="builder-hint">Your selected parts and their planned prices appear here.</p>
@@ -380,6 +427,7 @@ require __DIR__ . '/../includes/header.php';
             </aside>
         </div>
     </section>
+
     <section class="builder-screen" id="step-search" data-step="search" hidden>
         <div class="builder-section-heading">
             <div>
@@ -389,22 +437,28 @@ require __DIR__ . '/../includes/header.php';
             </div>
             <button type="button" class="builder-secondary-button" id="backToModelFromSearch">← Back to 2D Bike</button>
         </div>
+
         <div class="selected-component-box builder-search-selected">
             <span>Selected Component</span>
             <strong id="searchSelectedComponent">None selected</strong>
         </div>
+
         <p class="marketplace-connection-note" id="marketplaceConnectionNote" role="status">Checking marketplace connection...</p>
+
         <form id="builderSearchForm" class="builder-live-search-form">
             <label for="productKeyword">Product Keyword (Optional)</label>
             <input type="text" id="productKeyword" placeholder="Example: Aluminum, Hydraulic, 31.8mm">
+
             <div class="builder-filter-heading">
                 <strong>How do you want to find this part?</strong>
                 <span>Choose one filter.</span>
             </div>
+
             <div class="builder-filter-tabs">
                 <button type="button" class="builder-filter-tab active" data-filter-mode="brand">Search by Brand</button>
                 <button type="button" class="builder-filter-tab" data-filter-mode="budget">Search by Budget</button>
             </div>
+
             <div id="brandFilterPanel" class="builder-filter-panel">
                 <label for="productBrand">Brand Name</label>
                 <input type="text" id="productBrand" list="productBrandOptions" placeholder="Example: Shimano, SRAM, Prowheel">
@@ -424,6 +478,7 @@ require __DIR__ . '/../includes/header.php';
                 </datalist>
                 <p class="builder-hint">Type a brand name or choose a suggestion.</p>
             </div>
+
             <div id="budgetFilterPanel" class="builder-filter-panel" hidden>
                 <label for="budgetPreset">Maximum Price</label>
                 <select id="budgetPreset">
@@ -438,12 +493,15 @@ require __DIR__ . '/../includes/header.php';
                 <label for="customBudget" id="customBudgetLabel" hidden>Enter Maximum Price (₱)</label>
                 <input type="number" id="customBudget" min="1" step="0.01" placeholder="Example: 750" hidden>
             </div>
+
             <button type="submit" class="builder-primary-button">Search Marketplace Listings</button>
         </form>
+
         <div class="compatibility-filter-banner" id="compatibilityFilterBanner" hidden>
             <span id="compatibilityFilterMessage"></span>
             <label><input type="checkbox" id="showAllSizesAnyway"> Show all results anyway</label>
         </div>
+
         <div class="builder-results-toolbar" id="builderResultsToolbar" hidden>
             <label for="productSort">
                 Sort results
@@ -456,9 +514,11 @@ require __DIR__ . '/../includes/header.php';
             </label>
             <button type="button" class="builder-secondary-button" id="loadMoreResults" hidden>Load More Results</button>
         </div>
+
         <div id="builderMessage" class="builder-search-status" role="status" aria-live="polite"></div>
         <div id="builderResults" class="builder-product-results"></div>
     </section>
+
     <section class="builder-screen" id="step-confirm" data-step="confirm" hidden>
         <div class="builder-section-heading">
             <div>
@@ -467,7 +527,9 @@ require __DIR__ . '/../includes/header.php';
                 <p>Review this listing before adding its estimated price to your plan.</p>
             </div>
         </div>
+
         <div id="confirmProductCard" class="confirm-product-card"></div>
+
         <div id="compatibilityWarning" class="compatibility-warning" hidden>
             <h3>⚠️ Let's Check That Fit First!</h3>
             <p>This part may not match something already selected on your bicycle.</p>
@@ -475,15 +537,18 @@ require __DIR__ . '/../includes/header.php';
             <button type="button" class="builder-secondary-button" id="findCompatibleParts">Find Compatible Alternatives</button>
             <button type="button" class="builder-warning-button" id="addAnyway">Add Anyway — Mark for Fit Review</button>
         </div>
+
         <div id="compatibilityReviewNote" class="compatibility-review-note" hidden>
             <strong>Specifications Not Verified</strong>
             <p>We couldn't verify all fit details for this listing. Check the product specifications before adding it.</p>
         </div>
+
         <div class="builder-step-actions">
             <button type="button" class="builder-secondary-button" id="cancelProductSelection">Cancel</button>
             <button type="button" class="builder-primary-button" id="confirmAddProduct">Add to My Bike</button>
         </div>
     </section>
+
     <section class="builder-screen" id="step-review" data-step="review" hidden>
         <div class="builder-section-heading">
             <div>
@@ -493,31 +558,36 @@ require __DIR__ . '/../includes/header.php';
             </div>
             <button type="button" class="builder-secondary-button" id="backToModelFromReview">← Continue Building</button>
         </div>
+
         <div class="builder-review-summary">
             <div><span>Bicycle Type</span><strong id="reviewBikeType">Not selected</strong></div>
             <div><span>Target Budget</span><strong id="reviewBudget">₱0.00</strong></div>
             <div><span>Estimated Parts Total</span><strong id="reviewTotal">₱0.00</strong></div>
             <div><span>Remaining Budget</span><strong id="reviewRemaining">₱0.00</strong></div>
         </div>
+
         <div class="builder-review-heading">
             <h3>Selected Bicycle Parts</h3>
             <span id="reviewPartCount">0 parts</span>
         </div>
+
         <div id="reviewPartsList" class="builder-review-parts"></div>
         <p id="reviewBudgetMessage" class="builder-budget-message"></p>
         <p class="builder-message" id="savePlanMessage" role="status"></p>
+
         <div class="builder-step-actions builder-save-actions">
             <button type="button" class="builder-secondary-button" id="deletePlanButton" hidden>Delete This Plan</button>
             <button type="button" class="builder-primary-button" id="savePlanButton">Save Build Plan</button>
         </div>
     </section>
 </div>
+
 <script>
 window.BICYCLE_BUILDER = <?= json_encode(array(
     'projectId' => $projectId,
     'userId' => $userId,
     'csrfToken' => csrf_token(),
-    'dashboardUrl' => url('dashboard.php'),
+    'dashboardUrl' => url('bicycles.php'),
     'components' => $components,
     'bikeTypes' => $bikeTypes,
     'bikeComponentMap' => $bikeComponentMap,
@@ -525,5 +595,7 @@ window.BICYCLE_BUILDER = <?= json_encode(array(
     'initial' => $initial
 ), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 </script>
+
 <script src="<?= h(url('assets/js/builder.js')) ?>?v=<?= APP_VERSION ?>"></script>
+
 <?php require __DIR__ . '/../includes/footer.php'; ?>

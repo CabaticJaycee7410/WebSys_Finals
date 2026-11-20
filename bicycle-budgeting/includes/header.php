@@ -5,6 +5,7 @@ require_once __DIR__ . '/functions.php';
 $pageTitle = isset($pageTitle) ? $pageTitle : APP_NAME;
 $isBuilderPage = ($pageTitle === 'Bicycle Builder');
 $currentPage = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '');
+$isGaragePage = ($currentPage === 'bicycles.php' || $currentPage === 'projects.php');
 ?>
 <!doctype html>
 <html lang="en">
@@ -26,8 +27,7 @@ $currentPage = basename(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : '')
     <nav>
         <?php if (logged_in()): ?>
             <a class="<?= $currentPage === 'dashboard.php' ? 'active' : '' ?>" href="<?= h(url('dashboard.php')) ?>">Dashboard</a>
-            <a class="<?= $currentPage === 'bicycles.php' ? 'active' : '' ?>" href="<?= h(url('bicycles.php')) ?>">My Bicycles</a>
-            <a class="<?= $currentPage === 'projects.php' ? 'active' : '' ?>" href="<?= h(url('projects.php')) ?>">My Builds</a>
+            <a class="<?= $isGaragePage ? 'active' : '' ?>" href="<?= h(url('bicycles.php')) ?>">My Garage</a>
             <a class="<?= $isBuilderPage ? 'active' : '' ?>" href="<?= h(url('builder/index.php')) ?>">Bicycle Builder</a>
             <a href="<?= h(url('catalog.php')) ?>">Parts Catalog</a>
             <a href="<?= h(url('marketplaces.php')) ?>">Marketplace</a>

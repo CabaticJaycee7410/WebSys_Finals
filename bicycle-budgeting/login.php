@@ -29,35 +29,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_name'] = $user['full_name'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_role'] = $user['role'];
+
             set_flash('success', 'Welcome back, ' . $user['full_name'] . '!');
             redirect('dashboard.php');
-        } else {
-            $error = 'The email or password is incorrect.';
         }
+
+        $error = 'The email or password is incorrect.';
     }
 }
 
 require __DIR__ . '/includes/header.php';
 ?>
+
 <section class="auth-container">
     <p class="eyebrow">WELCOME BACK</p>
     <h1>Log In</h1>
     <p>Continue planning your bicycle build.</p>
+
     <?php if ($error): ?>
         <div class="alert error"><?= h($error) ?></div>
     <?php endif; ?>
+
     <form method="post">
         <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+
         <div class="form-group">
             <label for="email">Email Address</label>
-            <input id="email" type="email" name="email" placeholder="Enter your email address" required value="<?= h(isset($_POST['email']) ? $_POST['email'] : '') ?>">
+            <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="Enter your email address"
+                autocomplete="email"
+                required
+                value="<?= h(isset($_POST['email']) ? $_POST['email'] : '') ?>"
+            >
         </div>
+
         <div class="form-group">
             <label for="password">Password</label>
-            <input id="password" type="password" name="password" placeholder="Enter your password" required>
+            <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+            >
         </div>
+
         <button class="btn" type="submit">Log In</button>
     </form>
-    <p class="auth-switch">Don't have an account? <a href="<?= h(url('register.php')) ?>">Create one</a>.</p>
+
+    <p class="auth-switch">
+        Don't have an account?
+        <a href="<?= h(url('register.php')) ?>">Create one</a>.
+    </p>
 </section>
+
 <?php require __DIR__ . '/includes/footer.php'; ?>

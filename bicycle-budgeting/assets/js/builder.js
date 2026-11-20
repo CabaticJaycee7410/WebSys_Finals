@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     const config = window.BICYCLE_BUILDER || {};
     const initial = config.initial || {};
@@ -6,13 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     const screens = [...document.querySelectorAll('.builder-screen')];
     const draftKey = `bicycle-builder-draft:${config.userId || 'user'}:${config.projectId || 'new'}`;
+    const money = value => '₱' + Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const allowedComponents = (type = bikeType()) => componentMap[type] || Object.keys(components);
     let restoredDraft = null;
 
     try {
         restoredDraft = JSON.parse(localStorage.getItem(draftKey) || 'null');
-    } catch (_) {
-        restoredDraft = null;
-    }
+    } catch (_) {}
 
     const draft = { ...(initial.parts || {}), ...((restoredDraft && restoredDraft.parts) || {}) };
     let selectedBicycleId = Number(restoredDraft && restoredDraft.bicycleId ? restoredDraft.bicycleId : initial.bicycleId || 0);
@@ -27,19 +28,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchProducts = [];
     let isLoadingMore = false;
 
-    const money = value => '₱' + Number(value || 0).toLocaleString('en-PH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    });
+    function bikeType() {
+        return document.querySelector('.bike-type-card.selected')?.dataset.bikeType || initial.bikeType || '';
+    }
 
-    const safeUrl = value => {
+    function safeUrl(value) {
         try {
-            const parsed = new URL(value, window.location.href);
-            return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '';
+            const url = new URL(value, window.location.href);
+            return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
         } catch (_) {
             return '';
         }
-    };
+    }
 
     function jsonCompatibility(part) {
         let value = part && part.compatibility ? part.compatibility : {};
@@ -53,12 +53,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return value && typeof value === 'object' ? value : {};
     }
 
+    function meta(part, field) {
+        const value = jsonCompatibility(part)[field];
+        return value === undefined || value === null || value === '' ? null : value;
+    }
+
+    function setText(id, value) {
+        const element = $(id);
+        if (element) element.textContent = value;
+    }
+
     function saveDraftLocally() {
         const status = $('draftSaveStatus');
         try {
             localStorage.setItem(draftKey, JSON.stringify({
                 projectId: Number(config.projectId || 0),
                 bicycleId: selectedBicycleId,
+                bicycleName: $('bicycleName').value,
                 bikeType: bikeType(),
                 buildName: $('buildName').value,
                 bikeBrand: $('bikeBrand').value,
@@ -82,33 +93,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const order = ['type', 'model', 'search', 'confirm', 'review'];
         document.querySelectorAll('[data-progress]').forEach(item => {
-            const itemIndex = order.indexOf(item.dataset.progress);
-            const currentIndex = order.indexOf(step);
-            item.classList.toggle('active', itemIndex === currentIndex);
-            item.classList.toggle('completed', itemIndex < currentIndex);
+            const index = order.indexOf(item.dataset.progress);
+            const current = order.indexOf(step);
+            item.classList.toggle('active', index === current);
+            item.classList.toggle('completed', index < current);
         });
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function bikeType() {
-        return document.querySelector('.bike-type-card.selected')?.dataset.bikeType || initial.bikeType || '';
-    }
-
-    function allowedComponents(type = bikeType()) {
-        return componentMap[type] || Object.keys(components);
-    }
-
     function applyBikeAppearance(type) {
         const svg = $('interactiveBikeSvg');
         if (!svg) return;
+
         const normalized = String(type || '').toLowerCase();
         const frame = $('bikeFrameShape');
         const handlebar = $('bikeHandlebarShape');
         const fork = $('bikeForkShape');
-        const frontTire = $('frontTireShape');
-        const rearTire = $('rearTireShape');
-        const foldingHinge = $('bikeHinge');
+        const tires = [$('frontTireShape'), $('rearTireShape')];
+        const hinge = $('bikeHinge');
 
         let framePath = 'M155 255 L285 255 L235 125 L155 255 M285 255 L390 125 L545 255 L285 255 M235 125 L390 125';
         let handlebarPath = 'M455 89 L610 108';
@@ -129,14 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tireRadius = 88;
             tireWidth = normalized.includes('gravel') || normalized.includes('cyclocross') ? 12 : 8;
         } else if (normalized.includes('fat bike')) {
-            framePath = 'M155 255 L285 255 L235 125 L155 255 M285 255 L390 125 L545 255 L285 255 M235 125 L390 125';
-            handlebarPath = 'M455 89 L610 108';
             tireRadius = 96;
             tireWidth = 21;
-        } else if (normalized.includes('folding')) {
-            framePath = 'M155 255 L285 255 L235 125 L155 255 M285 255 L390 125 L545 255 L285 255 M235 125 L390 125';
-            handlebarPath = 'M455 89 L610 108';
-            if (foldingHinge) foldingHinge.style.display = 'block';
         } else if (normalized.includes('mountain') || normalized.includes('downhill') || normalized.includes('enduro') || normalized.includes('cross-country')) {
             framePath = 'M155 255 L300 255 L245 145 L155 255 M300 255 L390 125 L545 255 L300 255 M245 145 L390 125';
             handlebarPath = 'M455 89 L610 95';
@@ -145,16 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
             tireWidth = 15;
         }
 
-        frame.setAttribute('d', framePath);
-        handlebar.setAttribute('d', handlebarPath);
-        fork.setAttribute('d', forkPath);
+        if (frame) frame.setAttribute('d', framePath);
+        if (handlebar) handlebar.setAttribute('d', handlebarPath);
+        if (fork) fork.setAttribute('d', forkPath);
 
-        [frontTire, rearTire].forEach(tire => {
+        tires.forEach(tire => {
+            if (!tire) return;
             tire.setAttribute('r', String(tireRadius));
             tire.style.strokeWidth = `${tireWidth}px`;
         });
 
-        if (!normalized.includes('folding') && foldingHinge) foldingHinge.style.display = 'none';
+        if (hinge) hinge.style.display = normalized.includes('folding') ? 'block' : 'none';
         svg.dataset.bikeType = type;
     }
 
@@ -164,20 +162,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!type) return;
-        $('modelTitle').textContent = `Build your ${type}`;
-        $('selectedBikeType').textContent = type;
-        $('bikeDiagramLabel').textContent = `${type} 2D Model`;
-        $('componentTypeNote').textContent = type === 'BMX' || type === 'Track / Fixed Gear'
+
+        setText('modelTitle', `Build your ${type}`);
+        setText('selectedBikeType', type);
+        setText('bikeDiagramLabel', `${type} 2D Model`);
+        setText('componentTypeNote', type === 'BMX' || type === 'Track / Fixed Gear'
             ? 'Single-speed component options are shown for this bicycle type.'
-            : 'The list changes based on bicycle type.';
+            : 'The list changes based on bicycle type.');
 
         const allowed = new Set(allowedComponents(type));
 
-        document.querySelectorAll('.component-button, .bike-part-marker').forEach(element => {
-            element.hidden = !allowed.has(element.dataset.component);
-        });
-
-        document.querySelectorAll('.bike-component-drawing, .interactive-bike-svg > g[data-component]').forEach(element => {
+        document.querySelectorAll('.component-button, .bike-part-marker, .bike-component-drawing, .interactive-bike-svg > g[data-component]').forEach(element => {
             element.hidden = !allowed.has(element.dataset.component);
         });
 
@@ -207,22 +202,19 @@ document.addEventListener('DOMContentLoaded', () => {
         { field: 'freehub_type', slots: ['wheelset', 'cassette'] }
     ];
 
-    function meta(part, field) {
-        const value = jsonCompatibility(part)[field];
-        return value === undefined || value === null || value === '' ? null : value;
-    }
-
     function checkCompatibility(candidate, slot, current) {
         const warnings = [];
-        let unverified = Object.keys(jsonCompatibility(candidate)).length === 0;
         const candidateMeta = jsonCompatibility(candidate);
+        let unverified = Object.keys(candidateMeta).length === 0;
 
         compatibilityGroups.forEach(group => {
             if (!group.slots.includes(slot)) return;
+
             const value = meta(candidate, group.field);
 
             group.slots.forEach(otherSlot => {
                 if (otherSlot === slot || !current[otherSlot]) return;
+
                 const existingValue = meta(current[otherSlot], group.field);
 
                 if (value === null || existingValue === null) {
@@ -236,27 +228,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const oldLabel = components[otherSlot] || otherSlot;
                 let message = `Fit check: This ${newLabel} has a different ${group.field.replaceAll('_', ' ')} value from your ${oldLabel}.`;
 
-                if (group.field === 'wheel_size') {
-                    const oldSize = jsonCompatibility(current[otherSlot]).wheel_size_label || existingValue;
-                    const newSize = candidateMeta.wheel_size_label || value;
-                    message = `Wheel-size mismatch: This ${newLabel} is ${newSize}, but your ${oldLabel} is ${oldSize}.`;
-                } else if (group.field === 'brake_mount') {
-                    message = `Brake fit mismatch: This ${newLabel} uses ${value}, but your ${oldLabel} uses ${existingValue}.`;
-                } else if (group.field === 'speed_count') {
-                    message = `Gear mismatch: This ${newLabel} is ${value}-speed, but your ${oldLabel} is ${existingValue}-speed.`;
-                } else if (group.field === 'clamp_diameter') {
-                    message = `Handlebar fit mismatch: The ${newLabel} uses ${value}mm, but your ${oldLabel} uses ${existingValue}mm.`;
-                } else if (group.field === 'seatpost_diameter') {
-                    message = `Seatpost fit mismatch: This ${newLabel} is ${value}mm, but your ${oldLabel} requires ${existingValue}mm.`;
-                } else if (group.field === 'axle_type' || group.field === 'hub_spacing') {
-                    message = `Wheel and axle fit mismatch: This ${newLabel} has ${value}, but your ${oldLabel} has ${existingValue}.`;
-                } else if (group.field === 'bottom_bracket_type') {
-                    message = `Bottom bracket fit mismatch: This ${newLabel} uses ${value}, but your ${oldLabel} uses ${existingValue}.`;
-                } else if (group.field === 'freehub_type') {
-                    message = `Cassette fit mismatch: This ${newLabel} needs ${value}, but your ${oldLabel} has ${existingValue}.`;
-                }
+                const messages = {
+                    wheel_size: `Wheel-size mismatch: This ${newLabel} is ${candidateMeta.wheel_size_label || value}, but your ${oldLabel} is ${jsonCompatibility(current[otherSlot]).wheel_size_label || existingValue}.`,
+                    brake_mount: `Brake fit mismatch: This ${newLabel} uses ${value}, but your ${oldLabel} uses ${existingValue}.`,
+                    speed_count: `Gear mismatch: This ${newLabel} is ${value}-speed, but your ${oldLabel} is ${existingValue}-speed.`,
+                    clamp_diameter: `Handlebar fit mismatch: The ${newLabel} uses ${value}mm, but your ${oldLabel} uses ${existingValue}mm.`,
+                    seatpost_diameter: `Seatpost fit mismatch: This ${newLabel} is ${value}mm, but your ${oldLabel} requires ${existingValue}mm.`,
+                    axle_type: `Wheel and axle fit mismatch: This ${newLabel} has ${value}, but your ${oldLabel} has ${existingValue}.`,
+                    hub_spacing: `Wheel and axle fit mismatch: This ${newLabel} has ${value}, but your ${oldLabel} has ${existingValue}.`,
+                    bottom_bracket_type: `Bottom bracket fit mismatch: This ${newLabel} uses ${value}, but your ${oldLabel} uses ${existingValue}.`,
+                    freehub_type: `Cassette fit mismatch: This ${newLabel} needs ${value}, but your ${oldLabel} has ${existingValue}.`
+                };
 
-                warnings.push({ field: group.field, relatedSlot: otherSlot, message });
+                warnings.push({
+                    field: group.field,
+                    relatedSlot: otherSlot,
+                    message: messages[group.field] || message
+                });
             });
         });
 
@@ -267,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             : frameSlots.includes(slot)
                 ? tireSlots.filter(key => current[key]).map(key => ({ slot: key, part: current[key] }))
                 : [];
+
         const frames = frameSlots.includes(slot)
             ? [{ slot, part: candidate }]
             : tireSlots.includes(slot)
@@ -296,12 +285,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         compatibilityGroups.forEach(group => {
             if (!group.slots.includes(slot)) return;
-            const existing = group.slots.find(key => key !== slot && draft[key] && meta(draft[key], group.field) !== null);
+
+            const existing = group.slots.find(key =>
+                key !== slot && draft[key] && meta(draft[key], group.field) !== null
+            );
+
             if (existing) filters[group.field] = meta(draft[existing], group.field);
         });
 
         if (['front_tire', 'rear_tire'].includes(slot)) {
-            const frame = ['frame', 'fork'].find(key => draft[key] && meta(draft[key], 'max_tire_width_mm') !== null);
+            const frame = ['frame', 'fork'].find(key =>
+                draft[key] && meta(draft[key], 'max_tire_width_mm') !== null
+            );
+
             if (frame) filters.max_tire_width_mm = meta(draft[frame], 'max_tire_width_mm');
         }
 
@@ -313,11 +309,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         Object.entries(draft).forEach(([slot, part]) => {
             if (part.forced_incompatible) flagged.add(slot);
+
             const current = { ...draft };
             delete current[slot];
-            const result = checkCompatibility(part, slot, current);
 
-            result.warnings.forEach(warning => {
+            checkCompatibility(part, slot, current).warnings.forEach(warning => {
                 flagged.add(slot);
                 flagged.add(warning.relatedSlot);
             });
@@ -333,10 +329,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const total = totalCost();
         const allowed = new Set(allowedComponents());
 
-        $('modelPartCount').textContent = entries.length;
-        $('modelPartTotal').textContent = money(total);
-        $('modelSideTotal').textContent = money(total);
-        $('modelTargetBudget').textContent = budgetValue() ? money(budgetValue()) : 'Not set';
+        setText('modelPartCount', entries.length);
+        setText('modelPartTotal', money(total));
+        setText('modelSideTotal', money(total));
+        setText('modelTargetBudget', budgetValue() ? money(budgetValue()) : 'Not set');
 
         const list = $('modelSelectedParts');
         list.replaceChildren();
@@ -351,8 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
         entries.forEach(([key, part]) => {
             const row = document.createElement('div');
             row.className = 'model-selected-part';
-            const imageUrl = safeUrl(part.image);
 
+            const imageUrl = safeUrl(part.image);
             if (imageUrl) {
                 const image = document.createElement('img');
                 image.className = 'model-selected-part-image';
@@ -364,12 +360,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const details = document.createElement('div');
             details.className = 'model-selected-part-details';
+
             const name = document.createElement('span');
             name.textContent = components[key] || key;
+
             const product = document.createElement('small');
             product.textContent = part.title || 'Selected listing';
+
             const price = document.createElement('strong');
             price.textContent = money(part.price);
+
             details.append(name, product);
 
             if (!allowed.has(key)) {
@@ -401,11 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 node.textContent = selected ? 'Selected' : 'Choose';
             });
 
-            document.querySelectorAll(`.bike-part-marker[data-component="${key}"]`).forEach(node => {
-                node.classList.toggle('has-part', selected);
-            });
-
-            document.querySelectorAll(`.component-button[data-component="${key}"]`).forEach(node => {
+            document.querySelectorAll(`.bike-part-marker[data-component="${key}"], .component-button[data-component="${key}"]`).forEach(node => {
                 node.classList.toggle('has-part', selected);
             });
 
@@ -426,6 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { Accept: 'application/json' }
             });
             const data = await response.json();
+
             note.textContent = data.message || 'Marketplace status is unavailable.';
             note.classList.toggle('is-ready', Boolean(data.configured));
             note.classList.toggle('is-offline', !data.configured);
@@ -458,8 +455,9 @@ document.addEventListener('DOMContentLoaded', () => {
         searchParams = null;
         searchProducts = [];
 
-        $('searchComponentTitle').textContent = components[key];
-        $('searchSelectedComponent').textContent = components[key];
+        setText('searchComponentTitle', components[key]);
+        setText('searchSelectedComponent', components[key]);
+
         $('productKeyword').value = '';
         $('productBrand').value = '';
         $('budgetPreset').value = '500';
@@ -482,8 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function readBudget() {
         const value = $('budgetPreset').value;
-        if (value === 'any') return '';
 
+        if (value === 'any') return '';
         if (value === 'custom') {
             const custom = Number($('customBudget').value);
             return custom > 0 ? String(custom) : '';
@@ -494,10 +492,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function matchesBrand(product, brand) {
         if (!brand) return true;
-        const wanted = brand.toLowerCase();
 
-        return String(product.brand || '').toLowerCase().includes(wanted)
-            || String(product.title || '').toLowerCase().includes(wanted);
+        const wanted = brand.toLowerCase();
+        return String(product.brand || '').toLowerCase().includes(wanted) ||
+            String(product.title || '').toLowerCase().includes(wanted);
     }
 
     function sortProducts(products) {
@@ -511,17 +509,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return sorted;
     }
 
+    function createImage(url, alt, className = '') {
+        const imageUrl = safeUrl(url);
+        if (!imageUrl) return null;
+
+        const image = document.createElement('img');
+        image.src = imageUrl;
+        image.alt = alt;
+        image.loading = 'lazy';
+        if (className) image.className = className;
+        return image;
+    }
+
     function createProductCard(product) {
         const card = document.createElement('article');
         card.className = 'builder-product-card live-product-card';
 
-        const imageUrl = safeUrl(product.image);
+        const image = createImage(product.image, product.title || 'Bicycle component');
 
-        if (imageUrl) {
-            const image = document.createElement('img');
-            image.src = imageUrl;
-            image.alt = product.title || 'Bicycle component';
-            image.loading = 'lazy';
+        if (image) {
             card.appendChild(image);
         } else {
             const placeholder = document.createElement('div');
@@ -532,16 +538,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const details = document.createElement('div');
         details.className = 'live-product-details';
+
         const title = document.createElement('h3');
         title.textContent = product.title || 'Unnamed product';
+
         const price = document.createElement('strong');
         price.className = 'live-product-price';
         price.textContent = money(product.price);
+
         const seller = document.createElement('p');
         seller.textContent = `Seller: ${product.seller_name || 'Marketplace seller'}`;
+
         const brand = document.createElement('p');
         brand.textContent = product.brand && product.brand !== 'No Brand'
-            ? `Brand: ${product.brand}` : 'Brand not provided';
+            ? `Brand: ${product.brand}`
+            : 'Brand not provided';
 
         details.append(title, price, seller, brand);
 
@@ -552,7 +563,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const linkUrl = safeUrl(product.url);
-
         if (linkUrl) {
             const link = document.createElement('a');
             link.href = linkUrl;
@@ -568,9 +578,9 @@ document.addEventListener('DOMContentLoaded', () => {
         choose.className = 'builder-primary-button';
         choose.textContent = 'Choose This Part';
         choose.addEventListener('click', () => chooseProduct(product));
+
         details.appendChild(choose);
         card.appendChild(details);
-
         return card;
     }
 
@@ -632,19 +642,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await response.json();
 
-            if (!response.ok || !data.success) throw new Error(data.message || 'Marketplace search failed.');
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Marketplace search failed.');
+            }
 
             let products = Array.isArray(data.products) ? data.products : [];
             const brandValue = searchParams?.get('brand') || '';
-            const budgetValue = searchParams?.get('max_budget') || '';
+            const budgetLimit = searchParams?.get('max_budget') || '';
 
             if (brandValue) products = products.filter(product => matchesBrand(product, brandValue));
-            if (budgetValue) products = products.filter(product => Number(product.price || 0) > 0 && Number(product.price) <= Number(budgetValue));
+
+            if (budgetLimit) {
+                products = products.filter(product =>
+                    Number(product.price || 0) > 0 && Number(product.price) <= Number(budgetLimit)
+                );
+            }
 
             if (Object.keys(compatibilityFilters).length && !showAllResults) {
-                const productsWithTags = products.filter(product => Object.keys(jsonCompatibility(product)).length > 0);
+                const tagged = products.filter(product => Object.keys(jsonCompatibility(product)).length > 0);
 
-                if (productsWithTags.length) {
+                if (tagged.length) {
                     products = products.filter(product => {
                         const metadata = jsonCompatibility(product);
 
@@ -653,32 +670,31 @@ document.addEventListener('DOMContentLoaded', () => {
                                 return !metadata.tire_width_mm || Number(metadata.tire_width_mm) <= Number(value);
                             }
 
-                            return metadata[field] == null || String(metadata[field]).toLowerCase() === String(value).toLowerCase();
+                            return metadata[field] == null ||
+                                String(metadata[field]).toLowerCase() === String(value).toLowerCase();
                         });
                     });
                 }
             }
 
-            if (!append) searchProducts = products;
-            else searchProducts = searchProducts.concat(products);
-
+            searchProducts = append ? searchProducts.concat(products) : products;
             searchPage = Number(data.page || params.get('page') || 1);
             renderSearchProducts();
 
             if (!searchProducts.length) {
                 $('builderMessage').textContent = 'No matching listings found. Try a different keyword, brand, or budget.';
-                $('loadMoreResults').hidden = true;
+                loadMoreButton.hidden = true;
             } else if (append && products.length === 0) {
                 $('builderMessage').textContent = `No more listings were returned. ${searchProducts.length} listing(s) are shown.`;
-                $('loadMoreResults').hidden = true;
+                loadMoreButton.hidden = true;
             } else {
                 $('builderMessage').textContent = `${searchProducts.length} listing(s) loaded. Prices are estimates from marketplace listings.`;
-                $('loadMoreResults').hidden = products.length === 0;
+                loadMoreButton.hidden = products.length === 0;
             }
         } catch (error) {
             console.error(error);
             $('builderMessage').textContent = error.message || 'Unable to connect to the marketplace.';
-            if (!append) $('loadMoreResults').hidden = true;
+            if (!append) loadMoreButton.hidden = true;
         } finally {
             searchButton.disabled = false;
             searchButton.textContent = 'Search Marketplace Listings';
@@ -690,8 +706,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function chooseProduct(product) {
         pendingProduct = { ...product };
+
         const current = { ...draft };
         delete current[activeComponent];
+
         compatibilityResult = checkCompatibility(product, activeComponent, current);
         renderConfirmation();
         showStep('confirm');
@@ -702,23 +720,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const card = $('confirmProductCard');
         card.replaceChildren();
-        const imageUrl = safeUrl(pendingProduct.image);
 
-        if (imageUrl) {
-            const image = document.createElement('img');
-            image.src = imageUrl;
-            image.alt = pendingProduct.title || 'Selected product';
-            card.appendChild(image);
-        }
+        const image = createImage(pendingProduct.image, pendingProduct.title || 'Selected product');
+        if (image) card.appendChild(image);
 
         const details = document.createElement('div');
         const title = document.createElement('h3');
         title.textContent = pendingProduct.title || 'Unnamed product';
+
         const price = document.createElement('strong');
         price.className = 'live-product-price';
         price.textContent = money(pendingProduct.price);
+
         const component = document.createElement('p');
         component.textContent = `Component: ${components[activeComponent]}`;
+
         const seller = document.createElement('p');
         seller.textContent = `Seller: ${pendingProduct.seller_name || 'Marketplace seller'}`;
 
@@ -727,17 +743,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const warning = $('compatibilityWarning');
         const list = $('compatibilityWarningList');
+        const warnings = compatibilityResult.warnings || [];
+
         list.replaceChildren();
 
-        (compatibilityResult.warnings || []).forEach(item => {
+        warnings.forEach(item => {
             const li = document.createElement('li');
             li.textContent = item.message;
             list.appendChild(li);
         });
 
-        warning.hidden = compatibilityResult.warnings.length === 0;
-        $('confirmAddProduct').hidden = compatibilityResult.warnings.length > 0;
-        $('compatibilityReviewNote').hidden = compatibilityResult.warnings.length > 0 || !compatibilityResult.unverified;
+        warning.hidden = warnings.length === 0;
+        $('confirmAddProduct').hidden = warnings.length > 0;
+        $('compatibilityReviewNote').hidden = warnings.length > 0 || !compatibilityResult.unverified;
     }
 
     function addPendingProduct(force = false) {
@@ -747,7 +765,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const status = compatibilityResult.warnings.length
             ? 'incompatible'
-            : (compatibilityResult.unverified ? 'needs_review' : 'compatible');
+            : compatibilityResult.unverified
+                ? 'needs_review'
+                : 'compatible';
 
         draft[activeComponent] = {
             ...pendingProduct,
@@ -768,10 +788,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pendingProduct = null;
         compatibilityResult = null;
+
         updateSummary();
         saveDraftLocally();
         showStep('model');
-        $('modelMessage').textContent = `${components[activeComponent]} added to your bicycle plan.`;
+        setText('modelMessage', `${components[activeComponent]} added to your bicycle plan.`);
     }
 
     function renderReview() {
@@ -780,11 +801,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const budget = budgetValue();
         const remaining = budget - total;
 
-        $('reviewBikeType').textContent = bikeType() || 'Not selected';
-        $('reviewBudget').textContent = budget ? money(budget) : 'No target set';
-        $('reviewTotal').textContent = money(total);
-        $('reviewRemaining').textContent = budget ? money(remaining) : 'Not applicable';
-        $('reviewPartCount').textContent = `${entries.length} part(s) selected`;
+        setText('reviewBikeType', bikeType() || 'Not selected');
+        setText('reviewBudget', budget ? money(budget) : 'No target set');
+        setText('reviewTotal', money(total));
+        setText('reviewRemaining', budget ? money(remaining) : 'Not applicable');
+        setText('reviewPartCount', `${entries.length} part(s) selected`);
 
         const list = $('reviewPartsList');
         list.replaceChildren();
@@ -799,35 +820,30 @@ document.addEventListener('DOMContentLoaded', () => {
         entries.forEach(([key, part]) => {
             const row = document.createElement('article');
             row.className = 'builder-review-part';
-            const imageUrl = safeUrl(part.image);
 
-            if (imageUrl) {
-                const image = document.createElement('img');
-                image.src = imageUrl;
-                image.alt = part.title || components[key];
-                row.appendChild(image);
-            }
+            const image = createImage(part.image, part.title || components[key]);
+            if (image) row.appendChild(image);
 
             const details = document.createElement('div');
             details.className = 'builder-review-part-details';
+
             const label = document.createElement('strong');
             label.textContent = components[key] || key;
+
             const title = document.createElement('span');
             title.textContent = part.title || 'Unnamed product';
+
             const price = document.createElement('b');
             price.textContent = money(part.price);
 
             details.append(label, title, price);
 
-            if (part.forced_incompatible) {
+            if (part.forced_incompatible || part.compatibility_status === 'needs_review') {
                 const note = document.createElement('small');
-                note.className = 'review-fit-warning';
-                note.textContent = '⚠ Fit warning — added for later review';
-                details.appendChild(note);
-            } else if (part.compatibility_status === 'needs_review') {
-                const note = document.createElement('small');
-                note.className = 'review-fit-note';
-                note.textContent = 'Specifications not verified';
+                note.className = part.forced_incompatible ? 'review-fit-warning' : 'review-fit-note';
+                note.textContent = part.forced_incompatible
+                    ? '⚠ Fit warning — added for later review'
+                    : 'Specifications not verified';
                 details.appendChild(note);
             }
 
@@ -862,19 +878,27 @@ document.addEventListener('DOMContentLoaded', () => {
     async function savePlan() {
         if (!bikeType()) {
             showStep('type');
-            $('typeMessage').textContent = 'Choose a bicycle type first.';
+            setText('typeMessage', 'Choose a bicycle type first.');
+            return;
+        }
+
+        if (!$('bicycleName').value.trim()) {
+            showStep('type');
+            setText('typeMessage', 'Enter a name for your bicycle before continuing.');
+            $('bicycleName').focus();
             return;
         }
 
         const button = $('savePlanButton');
         button.disabled = true;
         button.textContent = 'Saving...';
-        $('savePlanMessage').textContent = 'Saving your bicycle plan...';
+        setText('savePlanMessage', 'Saving your bicycle plan...');
 
         const payload = {
             csrfToken: config.csrfToken,
             projectId: Number(config.projectId || 0),
             bicycleId: selectedBicycleId,
+            bicycleName: $('bicycleName').value.trim(),
             bicycleType: bikeType(),
             bicycleBrand: $('bikeBrand').value.trim(),
             bicycleModel: $('bikeModel').value.trim(),
@@ -892,23 +916,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    Accept: 'application/json'
                 },
                 body: JSON.stringify(payload)
             });
 
             const data = await response.json();
 
-            if (!response.ok || !data.success) throw new Error(data.message || 'Unable to save your plan.');
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Unable to save your plan.');
+            }
 
             try {
                 localStorage.removeItem(draftKey);
             } catch (_) {}
 
-            $('savePlanMessage').textContent = 'Saved! Returning to dashboard...';
-            window.location.href = config.dashboardUrl || '../dashboard.php';
+            setText('savePlanMessage', 'Saved! Returning to My Garage...');
+            window.location.href = config.dashboardUrl || '../bicycles.php';
         } catch (error) {
-            $('savePlanMessage').textContent = error.message;
+            setText('savePlanMessage', error.message);
         } finally {
             button.disabled = false;
             button.textContent = config.projectId ? 'Update Build Plan' : 'Save Build Plan';
@@ -916,8 +942,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function deletePlan() {
-        if (!config.projectId) return;
-        if (!window.confirm('Delete this bicycle plan? Its selected parts will also be removed.')) return;
+        if (!config.projectId || !window.confirm('Delete this bicycle plan? Its selected parts will also be removed.')) return;
 
         const button = $('deletePlanButton');
         button.disabled = true;
@@ -927,7 +952,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    Accept: 'application/json'
                 },
                 body: JSON.stringify({
                     projectId: Number(config.projectId),
@@ -937,15 +962,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
 
-            if (!response.ok || !data.success) throw new Error(data.message || 'Unable to delete plan.');
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Unable to delete plan.');
+            }
 
             try {
                 localStorage.removeItem(draftKey);
             } catch (_) {}
 
-            window.location.href = config.dashboardUrl || '../dashboard.php';
+            window.location.href = config.dashboardUrl || '../bicycles.php';
         } catch (error) {
-            $('savePlanMessage').textContent = error.message;
+            setText('savePlanMessage', error.message);
             button.disabled = false;
         }
     }
@@ -956,12 +983,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('toBikeModel').addEventListener('click', () => {
         if (!bikeType()) {
-            $('typeMessage').textContent = 'Choose a bicycle type before continuing.';
+            setText('typeMessage', 'Choose a bicycle type before continuing.');
+            return;
+        }
+
+        if (!$('bicycleName').value.trim()) {
+            setText('typeMessage', 'Enter a name for your bicycle before continuing.');
+            $('bicycleName').focus();
             return;
         }
 
         if (!$('buildName').value.trim()) $('buildName').value = `${bikeType()} Build`;
-        $('typeMessage').textContent = '';
+
+        setText('typeMessage', '');
         updateSummary();
         saveDraftLocally();
         showStep('model');
@@ -1014,7 +1048,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showAllResults = false;
         $('showAllSizesAnyway').checked = false;
         $('compatibilityFilterBanner').hidden = Object.keys(compatibilityFilters).length === 0;
-        $('compatibilityFilterMessage').textContent = 'Looking for listings with matching specifications. Items without specifications may still need manual checking.';
+        setText('compatibilityFilterMessage', 'Looking for listings with matching specifications. Items without specifications may still need manual checking.');
         showStep('search');
         searchMarketplace(false);
     });
@@ -1030,17 +1064,20 @@ document.addEventListener('DOMContentLoaded', () => {
     $('savePlanButton').addEventListener('click', savePlan);
     $('deletePlanButton').addEventListener('click', deletePlan);
 
-    ['buildName', 'bikeBrand', 'bikeModel', 'targetBudget'].forEach(id => {
+    const fieldDefaults = {
+        bicycleName: initial.bicycleName || '',
+        buildName: initial.projectName || '',
+        bikeBrand: initial.bikeBrand || '',
+        bikeModel: initial.bikeModel || '',
+        targetBudget: Number(initial.budget || 0) || ''
+    };
+
+    ['bicycleName', 'buildName', 'bikeBrand', 'bikeModel', 'targetBudget'].forEach(id => {
         const restoredValue = restoredDraft
-            ? (id === 'targetBudget' ? restoredDraft.budget : restoredDraft[id])
+            ? id === 'targetBudget' ? restoredDraft.budget : restoredDraft[id]
             : undefined;
 
-        $(id).value = restoredValue !== undefined
-            ? restoredValue
-            : (id === 'buildName' ? initial.projectName || ''
-                : id === 'bikeBrand' ? initial.bikeBrand || ''
-                    : id === 'bikeModel' ? initial.bikeModel || ''
-                        : Number(initial.budget || 0) || '');
+        $(id).value = restoredValue !== undefined ? restoredValue : fieldDefaults[id];
 
         $(id).addEventListener('input', () => {
             if (id === 'targetBudget') updateSummary();
@@ -1065,6 +1102,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (selectedBicycleId && option) {
                 const type = option.dataset.type || '';
+
+                $('bicycleName').value = option.dataset.name || '';
                 $('bikeBrand').value = option.dataset.brand || '';
                 $('bikeModel').value = option.dataset.model || '';
 
@@ -1073,6 +1112,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (type) setBikeType(type);
+            } else {
+                $('bicycleName').value = '';
+                $('bikeBrand').value = '';
+                $('bikeModel').value = '';
             }
 
             saveDraftLocally();
