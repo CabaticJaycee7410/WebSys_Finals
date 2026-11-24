@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -12,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($csrfToken)) {
         $errors[] = 'Session expired. Refresh and try again.';
     }
-
     $category = isset($_POST['category']) ? trim((string)$_POST['category']) : '';
     $description = isset($_POST['description']) ? trim((string)$_POST['description']) : '';
     $amountInput = isset($_POST['amount']) ? $_POST['amount'] : null;
@@ -23,20 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($category, $categories, true)) {
         $errors[] = 'Choose a valid expense category.';
     }
-
     if ($description === '') {
         $errors[] = 'Enter an expense description.';
     }
-
     if ($amount === false || $amount <= 0) {
         $errors[] = 'Enter an amount greater than zero.';
     }
-
     $dateObject = DateTime::createFromFormat('Y-m-d', $date);
     if (!$dateObject || $dateObject->format('Y-m-d') !== $date) {
         $errors[] = 'Enter a valid date.';
     }
-
     if ($projectId > 0) {
         $stmt = $pdo->prepare('SELECT project_id FROM projects WHERE project_id = ? AND user_id = ?');
         $stmt->execute(array($projectId, $userId));
@@ -46,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $projectId = 0;
     }
-
     if (!$errors) {
         $stmt = $pdo->prepare('INSERT INTO actual_expenses (user_id, project_id, category, description, amount, expense_date) VALUES (?, ?, ?, ?, ?, ?)');
         $stmt->execute(array($userId, $projectId ? $projectId : null, $category, $description, $amount, $date));
@@ -75,8 +70,9 @@ require __DIR__ . '/includes/header.php';
         <h1>Expenses</h1>
         <p>Record maintenance, repairs, daily cycling, and trip expenses.</p>
     </div>
+    <button type="button" class="user-guide-trigger" id="startUserGuide">ⓘ How to Use</button>
 </div>
-<section class="dashboard-stats">
+<section class="dashboard-stats" data-guide="expenses-overview">
     <article class="stat-card">
         <span>Total Recorded Expenses</span>
         <h2><?= money($total) ?></h2>
@@ -95,7 +91,7 @@ require __DIR__ . '/includes/header.php';
     <?php endforeach; ?>
     <form method="post" class="form-grid">
         <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
-        <div class="form-group">
+        <div class="form-group" data-guide="expenses-category">
             <label>Category</label>
             <select name="category" required>
                 <option value="">Choose category</option>
@@ -104,7 +100,7 @@ require __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" data-guide="expenses-project">
             <label>Related Bicycle Build (Optional)</label>
             <select name="project_id">
                 <option value="0">General expense</option>
@@ -113,22 +109,22 @@ require __DIR__ . '/includes/header.php';
                 <?php endforeach; ?>
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" data-guide="expenses-description">
             <label>Description</label>
             <input name="description" required maxlength="255" placeholder="Example: Brake adjustment">
         </div>
-        <div class="form-group">
+        <div class="form-group" data-guide="expenses-amount">
             <label>Amount (₱)</label>
             <input name="amount" type="number" min="0.01" step="0.01" required>
         </div>
-        <div class="form-group">
+        <div class="form-group" data-guide="expenses-date">
             <label>Expense Date</label>
             <input name="expense_date" type="date" value="<?= date('Y-m-d') ?>" required>
         </div>
-        <button class="btn" type="submit">Save Expense</button>
+        <button class="btn" type="submit" data-guide="expenses-save">Save Expense</button>
     </form>
 </section>
-<section class="dashboard-projects">
+<section class="dashboard-projects" data-guide="expenses-history">
     <div class="section-heading">
         <div>
             <h2>Expense History</h2>
@@ -152,4 +148,26 @@ require __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 </section>
+<div class="user-guide-backdrop" id="userGuideBackdrop" hidden></div>
+<div class="user-guide-panel" id="userGuidePanel" role="dialog" aria-modal="true" aria-labelledby="userGuideTitle" hidden>
+    <div class="user-guide-panel-top">
+        <div>
+            <p class="user-guide-label" id="userGuideCount">HOW TO USE</p>
+            <h3 id="userGuideTitle">Expenses Guide</h3>
+        </div>
+        <button type="button" class="user-guide-close" id="userGuideClose" aria-label="Close guide">×</button>
+    </div>
+    <p id="userGuideText"></p>
+    <div class="user-guide-progress">
+        <div class="user-guide-progress-fill" id="userGuideProgress"></div>
+    </div>
+    <div class="user-guide-panel-actions">
+        <span class="user-guide-counter" id="userGuideCounter"></span>
+        <div class="user-guide-buttons">
+            <button type="button" class="user-guide-button" id="userGuidePrevious">Previous</button>
+            <button type="button" class="user-guide-button primary" id="userGuideNext">Next</button>
+        </div>
+    </div>
+</div>
+<script src="<?= h(url('assets/js/user-guide.js')) ?>?v=<?= APP_VERSION ?>"></script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

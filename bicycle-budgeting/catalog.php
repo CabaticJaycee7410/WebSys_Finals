@@ -1,179 +1,190 @@
+
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
-$pageTitle = 'Parts Catalog';
-$pdo = require __DIR__ . '/config/database.php';
-$userId = current_user_id();
-$errors = array();
-$componentOptions = array(
-    'frame'=>'Frame',
-    'fork'=>'Fork',
-    'handlebar'=>'Handlebar',
-    'stem'=>'Stem',
-    'headset'=>'Headset',
-    'grips'=>'Grips',
-    'saddle'=>'Saddle',
-    'seatpost'=>'Seatpost',
-    'wheelset'=>'Wheelset',
-    'front_tire'=>'Front Tire',
-    'rear_tire'=>'Rear Tire',
-    'crankset'=>'Crankset',
-    'bottom_bracket'=>'Bottom Bracket',
-    'pedals'=>'Pedals',
-    'chain'=>'Chain',
-    'cassette'=>'Cassette',
-    'shifter'=>'Shifter',
-    'front_derailleur'=>'Front Derailleur',
-    'rear_derailleur'=>'Rear Derailleur',
-    'front_brake'=>'Front Brake',
-    'rear_brake'=>'Rear Brake',
-    'other'=>'Other'
+$pageTitle = 'User Guide';
+
+$sections = array(
+    array(
+        'number' => '01',
+        'title' => 'Dashboard',
+        'description' => 'The Dashboard gives you an overview of your bicycle plans and budgeting activities.',
+        'steps' => array(
+            'Log in to your account to open the Dashboard.',
+            'View your saved build plans and bicycle budget summary.',
+            'Check your recorded expenses and savings progress.',
+            'Use the navigation menu to open other system functions.'
+        )
+    ),
+    array(
+        'number' => '02',
+        'title' => 'My Garage',
+        'description' => 'My Garage is where you manage your bicycles and their saved build plans.',
+        'steps' => array(
+            'Open My Garage from the navigation menu.',
+            'View your existing bicycle profiles and their saved build plans.',
+            'Select Edit Plan to modify an existing build.',
+            'Select Delete Plan to remove a build plan. Confirm the deletion when asked.',
+            'Use the Bicycle Builder to create another build plan.'
+        )
+    ),
+    array(
+        'number' => '03',
+        'title' => 'Bicycle Builder',
+        'description' => 'Use the Bicycle Builder to create a bicycle plan, select components, and calculate the estimated build cost.',
+        'steps' => array(
+            'Open Bicycle Builder from the navigation menu.',
+            'Choose an existing bicycle or create a new bicycle build.',
+            'Select the bicycle type you want to build.',
+            'Enter the Bicycle Name and Build Plan Name.',
+            'Optionally enter the bicycle brand and model.',
+            'Enter your Target Budget.',
+            'Click Continue to Bicycle Builder.'
+        )
+    ),
+    array(
+        'number' => '04',
+        'title' => 'Selecting Bicycle Parts',
+        'description' => 'The second step of the builder lets you select components using the interactive 2D bicycle model or component list.',
+        'steps' => array(
+            'Click a marker on the 2D bicycle model or select a component from the component list.',
+            'The system will open the search page for your selected component.',
+            'Choose a product keyword if you want to narrow your search.',
+            'Select Search by Brand and enter a brand name, or select Search by Budget and choose a maximum price.',
+            'Click Search Marketplace Listings.',
+            'Review the available product listings and use the sorting options if needed.',
+            'Select a product to view its details.'
+        )
+    ),
+    array(
+        'number' => '05',
+        'title' => 'Confirming Selected Parts',
+        'description' => 'Review a product before adding it to your bicycle plan.',
+        'steps' => array(
+            'Check the product name, details, and listed price.',
+            'Review any compatibility warning shown by the system.',
+            'If the product is suitable, click Add to My Bike.',
+            'If you need another option, select Find Compatible Alternatives.',
+            'You may cancel the selection if you do not want to add the product.',
+            'Repeat the process for other components.'
+        )
+    ),
+    array(
+        'number' => '06',
+        'title' => 'Reviewing and Saving a Build',
+        'description' => 'The final step displays your selected components and estimated budget.',
+        'steps' => array(
+            'Click Review Build after selecting your components.',
+            'Review your bicycle type and target budget.',
+            'Check the selected parts and their estimated prices.',
+            'Review the estimated parts total and remaining budget.',
+            'Click Save Build Plan to save your new plan.',
+            'When editing an existing plan, use the update option to save your changes.'
+        )
+    ),
+    array(
+        'number' => '07',
+        'title' => 'Parts Catalog',
+        'description' => 'The Parts Catalog stores bicycle products and custom parts for your reference.',
+        'steps' => array(
+            'Open Parts Catalog from the navigation menu.',
+            'Use the Add a Custom Part form for a part that is not available in the live marketplace.',
+            'Select its component category.',
+            'Enter the part name, brand, and estimated price.',
+            'You may also enter a product URL.',
+            'Click Add Custom Part to save it.',
+            'View your saved items in the Saved Parts section.',
+            'Click View Listing to open a product link, or Remove to delete an item from your catalog.'
+        )
+    ),
+    array(
+        'number' => '08',
+        'title' => 'Marketplace',
+        'description' => 'Use Marketplace to browse available bicycle products and compare listings.',
+        'steps' => array(
+            'Open Marketplace from the navigation menu.',
+            'Browse the available product listings.',
+            'Review product information and displayed prices.',
+            'Open a listing to view more information from the seller.',
+            'Use the information to compare products before making a purchase decision.'
+        )
+    ),
+    array(
+        'number' => '09',
+        'title' => 'Expenses',
+        'description' => 'Use Expenses to record and monitor your bicycle-related spending.',
+        'steps' => array(
+            'Open Expenses from the navigation menu.',
+            'Use the expense form to enter a new expense.',
+            'Provide the requested expense details and amount.',
+            'Save the record.',
+            'Review your recorded expenses and update or remove entries using the available actions.'
+        )
+    ),
+    array(
+        'number' => '10',
+        'title' => 'Savings',
+        'description' => 'Use Savings to monitor the money you are setting aside for your bicycle plans.',
+        'steps' => array(
+            'Open Savings from the navigation menu.',
+            'View your current savings information.',
+            'Use the available form to record or update your savings.',
+            'Review your progress toward your savings goal.'
+        )
+    )
 );
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $csrfToken = isset($_POST['csrf_token']) ? $_POST['csrf_token'] : null;
-
-    if (!verify_csrf_token($csrfToken)) {
-        $errors[] = 'Session expired. Refresh and try again.';
-    }
-
-    $action = isset($_POST['action']) ? $_POST['action'] : 'add';
-
-    if ($action === 'delete') {
-        $catalogId = isset($_POST['catalog_id']) ? (int)$_POST['catalog_id'] : 0;
-
-        if (!$errors) {
-            $stmt = $pdo->prepare('DELETE FROM parts_catalog WHERE catalog_id = ? AND user_id = ?');
-            $stmt->execute(array($catalogId, $userId));
-            set_flash('success', 'Catalog item removed.');
-            redirect('catalog.php');
-        }
-    } else {
-        $key = isset($_POST['component_key']) ? (string)$_POST['component_key'] : 'other';
-        $title = isset($_POST['product_title']) ? trim((string)$_POST['product_title']) : '';
-        $brand = isset($_POST['brand']) ? trim((string)$_POST['brand']) : '';
-        $priceInput = isset($_POST['price']) ? $_POST['price'] : 0;
-        $price = filter_var($priceInput, FILTER_VALIDATE_FLOAT);
-        $urlValue = isset($_POST['product_url']) ? trim((string)$_POST['product_url']) : '';
-
-        if (!isset($componentOptions[$key])) {
-            $errors[] = 'Choose a valid component.';
-        }
-
-        if ($title === '') {
-            $errors[] = 'Enter a part name.';
-        }
-
-        if ($price === false || $price < 0) {
-            $errors[] = 'Enter a valid price.';
-        }
-
-        if ($urlValue !== '' && !filter_var($urlValue, FILTER_VALIDATE_URL)) {
-            $errors[] = 'Enter a valid product URL.';
-        }
-
-        if (!$errors) {
-            $stmt = $pdo->prepare("INSERT INTO parts_catalog (user_id,component_key,product_title,brand,price,product_url,source) VALUES (?,?,?,?,?,?, 'Manual')");
-            $stmt->execute(array(
-                $userId,
-                $key,
-                $title,
-                $brand !== '' ? $brand : null,
-                $price,
-                $urlValue !== '' ? $urlValue : null
-            ));
-            set_flash('success', 'Part added to your catalog.');
-            redirect('catalog.php');
-        }
-    }
-}
-
-$stmt = $pdo->prepare('SELECT * FROM parts_catalog WHERE user_id = ? ORDER BY created_at DESC');
-$stmt->execute(array($userId));
-$parts = $stmt->fetchAll();
 require __DIR__ . '/includes/header.php';
 ?>
 <div class="page-header">
     <div>
-        <p class="eyebrow">YOUR SAVED COMPONENTS</p>
-        <h1>Parts Catalog</h1>
-        <p>Live products you selected in the builder are saved here for reference.</p>
+        <p class="eyebrow">SYSTEM INSTRUCTIONS</p>
+        <h1>User Guide</h1>
+        <p>Learn how to navigate and use the different features of the Bicycle Budgeting System.</p>
     </div>
 </div>
-<section class="content-card">
-    <h2>Add a Custom Part</h2>
-    <p class="muted">Use this only for parts that are not available in the live marketplace.</p>
-    <?php foreach ($errors as $error): ?>
-        <div class="alert error"><?= h($error) ?></div>
-    <?php endforeach; ?>
-    <form method="post" class="form-grid">
-        <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
-        <div class="form-group">
-            <label>Component</label>
-            <select name="component_key">
-                <?php foreach ($componentOptions as $key => $label): ?>
-                    <option value="<?= h($key) ?>"><?= h($label) ?></option>
+
+<section class="content-card" style="margin-bottom:24px;">
+    <p class="eyebrow">WELCOME</p>
+    <h2>Getting Started</h2>
+    <p>This guide provides instructions for using the main features of the system. Follow each section to learn how to manage your bicycles, create build plans, browse products, and monitor your budget.</p>
+    <ol>
+        <li>Log in using your registered account.</li>
+        <li>Open the Dashboard to view your system overview.</li>
+        <li>Use the navigation menu to access the feature you need.</li>
+        <li>Follow the instructions for each feature below.</li>
+    </ol>
+</section>
+
+<div class="guide-sections">
+    <?php foreach ($sections as $section): ?>
+        <section class="content-card guide-section" id="guide-<?= h($section['number']) ?>">
+            <div class="guide-section-heading">
+                <span class="guide-number"><?= h($section['number']) ?></span>
+                <div>
+                    <h2><?= h($section['title']) ?></h2>
+                    <p><?= h($section['description']) ?></p>
+                </div>
+            </div>
+            <ol>
+                <?php foreach ($section['steps'] as $step): ?>
+                    <li><?= h($step) ?></li>
                 <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Part Name</label>
-            <input name="product_title" required maxlength="255">
-        </div>
-        <div class="form-group">
-            <label>Brand</label>
-            <input name="brand" maxlength="120">
-        </div>
-        <div class="form-group">
-            <label>Estimated Price (₱)</label>
-            <input name="price" type="number" min="0" step="0.01" required>
-        </div>
-        <div class="form-group full-width">
-            <label>Product URL (Optional)</label>
-            <input name="product_url" type="url" placeholder="https://...">
-        </div>
-        <button class="btn" type="submit">Add Custom Part</button>
-    </form>
+            </ol>
+        </section>
+    <?php endforeach; ?>
+</div>
+
+<section class="content-card" style="margin-top:24px;">
+    <p class="eyebrow">IMPORTANT REMINDERS</p>
+    <h2>Using the System Properly</h2>
+    <ul>
+        <li>Review your information before saving changes.</li>
+        <li>Check product prices and specifications because marketplace listings may change.</li>
+        <li>The Bicycle Builder is for planning and budgeting. It does not automatically purchase products.</li>
+        <li>Deleting a build plan may also remove its associated bicycle profile when no other plans remain.</li>
+        <li>Keep your account information secure.</li>
+    </ul>
 </section>
-<section class="dashboard-projects">
-    <div class="section-heading">
-        <div>
-            <h2>Saved Parts</h2>
-            <p><?= count($parts) ?> catalog item(s)</p>
-        </div>
-    </div>
-    <?php if (!$parts): ?>
-        <div class="empty-state">
-            <h3>Your catalog is empty</h3>
-            <p>Products selected and saved through the Bicycle Builder will appear here when the marketplace provides an item ID.</p>
-        </div>
-    <?php else: ?>
-        <div class="catalog-grid">
-            <?php foreach ($parts as $part): ?>
-                <article class="catalog-card">
-                    <?php if ($part['image_url']): ?>
-                        <img src="<?= h($part['image_url']) ?>" alt="<?= h($part['product_title']) ?>" loading="lazy">
-                    <?php else: ?>
-                        <div class="catalog-placeholder">🚲</div>
-                    <?php endif; ?>
-                    <div class="catalog-card-body">
-                        <span class="catalog-category"><?= h(isset($componentOptions[$part['component_key']]) ? $componentOptions[$part['component_key']] : $part['component_key']) ?></span>
-                        <h3><?= h($part['product_title']) ?></h3>
-                        <p><?= h($part['brand'] ? $part['brand'] : 'Brand not specified') ?> · <?= h($part['source']) ?></p>
-                        <strong><?= money($part['price']) ?></strong>
-                        <?php if ($part['product_url']): ?>
-                            <a href="<?= h($part['product_url']) ?>" target="_blank" rel="noopener noreferrer">View listing ↗</a>
-                        <?php endif; ?>
-                        <form method="post" onsubmit="return confirm('Remove this catalog item?')">
-                            <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="catalog_id" value="<?= (int)$part['catalog_id'] ?>">
-                            <button class="project-delete-button" type="submit">Remove</button>
-                        </form>
-                    </div>
-                </article>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-</section>
+
 <?php require __DIR__ . '/includes/footer.php'; ?>

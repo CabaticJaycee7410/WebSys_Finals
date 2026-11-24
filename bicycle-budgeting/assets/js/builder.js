@@ -479,8 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function readBudget() {
         const value = $('budgetPreset').value;
-
         if (value === 'any') return '';
+
         if (value === 'custom') {
             const custom = Number($('customBudget').value);
             return custom > 0 ? String(custom) : '';
@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function matchesBrand(product, brand) {
         if (!brand) return true;
-
         const wanted = brand.toLowerCase();
         return String(product.brand || '').toLowerCase().includes(wanted) ||
             String(product.title || '').toLowerCase().includes(wanted);
@@ -525,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
         card.className = 'builder-product-card live-product-card';
 
         const image = createImage(product.image, product.title || 'Bicycle component');
-
         if (image) {
             card.appendChild(image);
         } else {
@@ -577,9 +575,9 @@ document.addEventListener('DOMContentLoaded', () => {
         choose.className = 'builder-primary-button';
         choose.textContent = 'Choose This Part';
         choose.addEventListener('click', () => chooseProduct(product));
-
         details.appendChild(choose);
         card.appendChild(details);
+
         return card;
     }
 
@@ -609,10 +607,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!append) {
             const query = ['bicycle', bikeType(), components[activeComponent], extra, brand].filter(Boolean).join(' ');
             searchParams = new URLSearchParams({ q: query });
-
             if (brand) searchParams.set('brand', brand);
             if (maxBudget) searchParams.set('max_budget', maxBudget);
-
             searchPage = 1;
             searchProducts = [];
             $('builderResults').replaceChildren();
@@ -663,12 +659,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tagged.length) {
                     products = products.filter(product => {
                         const metadata = jsonCompatibility(product);
-
                         return Object.entries(compatibilityFilters).every(([field, value]) => {
                             if (field === 'max_tire_width_mm') {
                                 return !metadata.tire_width_mm || Number(metadata.tire_width_mm) <= Number(value);
                             }
-
                             return metadata[field] == null ||
                                 String(metadata[field]).toLowerCase() === String(value).toLowerCase();
                         });
@@ -705,10 +699,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function chooseProduct(product) {
         pendingProduct = { ...product };
-
         const current = { ...draft };
         delete current[activeComponent];
-
         compatibilityResult = checkCompatibility(product, activeComponent, current);
         renderConfirmation();
         showStep('confirm');
@@ -743,7 +735,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const warning = $('compatibilityWarning');
         const list = $('compatibilityWarningList');
         const warnings = compatibilityResult.warnings || [];
-
         list.replaceChildren();
 
         warnings.forEach(item => {
@@ -759,7 +750,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addPendingProduct(force = false) {
         if (!pendingProduct || !activeComponent) return;
-
         if (draft[activeComponent] && !window.confirm(`Replace your current ${components[activeComponent]}?`)) return;
 
         const status = compatibilityResult.warnings.length
@@ -787,7 +777,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         pendingProduct = null;
         compatibilityResult = null;
-
         updateSummary();
         saveDraftLocally();
         showStep('model');
@@ -919,7 +908,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify(payload)
             });
-
             const data = await response.json();
 
             if (!response.ok || !data.success) {
@@ -940,42 +928,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function deletePlan() {
-        if (!config.projectId || !window.confirm('Delete this bicycle plan? Its selected parts will also be removed.')) return;
-
-        const button = $('deletePlanButton');
-        button.disabled = true;
-
-        try {
-            const response = await fetch('delete_plan.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json'
-                },
-                body: JSON.stringify({
-                    projectId: Number(config.projectId),
-                    csrfToken: config.csrfToken
-                })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Unable to delete plan.');
-            }
-
-            try {
-                localStorage.removeItem(draftKey);
-            } catch (_) {}
-
-            window.location.href = config.dashboardUrl || '../bicycles.php';
-        } catch (error) {
-            setText('savePlanMessage', error.message);
-            button.disabled = false;
-        }
-    }
-
     document.querySelectorAll('.bike-type-card').forEach(card => {
         card.addEventListener('click', () => setBikeType(card.dataset.bikeType));
     });
@@ -993,7 +945,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!$('buildName').value.trim()) $('buildName').value = `${bikeType()} Build`;
-
         setText('typeMessage', '');
         updateSummary();
         saveDraftLocally();
@@ -1061,7 +1012,13 @@ document.addEventListener('DOMContentLoaded', () => {
     $('backToBikeType').addEventListener('click', () => showStep('type'));
     $('backToModelFromReview').addEventListener('click', () => showStep('model'));
     $('savePlanButton').addEventListener('click', savePlan);
-    $('deletePlanButton').addEventListener('click', deletePlan);
+
+    $('cancelEditButton').addEventListener('click', () => {
+        try {
+            localStorage.removeItem(draftKey);
+        } catch (_) {}
+        window.location.href = config.dashboardUrl || '../bicycles.php';
+    });
 
     const fieldDefaults = {
         bicycleName: initial.bicycleName || '',
@@ -1073,7 +1030,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ['bicycleName', 'buildName', 'bikeBrand', 'bikeModel', 'targetBudget'].forEach(id => {
         $(id).value = fieldDefaults[id];
-
         $(id).addEventListener('input', () => {
             if (id === 'targetBudget') updateSummary();
             saveDraftLocally();
@@ -1097,7 +1053,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (selectedBicycleId && option) {
                 const type = option.dataset.type || '';
-
                 $('bicycleName').value = option.dataset.name || '';
                 $('bikeBrand').value = option.dataset.brand || '';
                 $('bikeModel').value = option.dataset.model || '';
@@ -1118,11 +1073,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const selectedType = initial.bikeType || '';
-
     if (selectedType) setBikeType(selectedType);
 
     if (config.projectId) {
-        $('deletePlanButton').hidden = false;
+        $('cancelEditButton').hidden = false;
         $('savePlanButton').textContent = 'Update Build Plan';
     }
 

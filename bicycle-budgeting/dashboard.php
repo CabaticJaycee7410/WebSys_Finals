@@ -23,11 +23,86 @@ $stmt = $pdo->prepare("SELECT COUNT(*) FROM bicycles WHERE user_id = ?");
 $stmt->execute(array($userId));
 $totalBicycles = (int)$stmt->fetchColumn();
 
-$stmt = $pdo->prepare("SELECT b.bicycle_id, b.bicycle_name, b.bicycle_type, b.brand, b.model, p.project_id, p.project_name, p.budget_amount, p.status, bp.bicycle_type AS plan_bicycle_type, bp.bicycle_brand, bp.bicycle_model, COUNT(pbp.build_part_id) AS selected_parts, COALESCE(SUM(pbp.price),0) AS planned_cost FROM bicycles b LEFT JOIN projects p ON p.bicycle_id = b.bicycle_id AND p.user_id = b.user_id LEFT JOIN builder_plans bp ON bp.project_id = p.project_id LEFT JOIN project_build_parts pbp ON pbp.project_id = p.project_id WHERE b.user_id = ? GROUP BY b.bicycle_id, p.project_id ORDER BY b.created_at DESC, p.created_at DESC LIMIT 20");
+$stmt = $pdo->prepare(
+    "SELECT
+        b.bicycle_id,
+        b.bicycle_name,
+        b.bicycle_type,
+        b.brand,
+        b.model,
+        p.project_id,
+        p.project_name,
+        p.budget_amount,
+        p.status,
+        bp.bicycle_type AS plan_bicycle_type,
+        bp.bicycle_brand,
+        bp.bicycle_model,
+        COALESCE(parts.selected_parts, 0) AS selected_parts,
+        COALESCE(parts.planned_cost, 0) AS planned_cost
+     FROM bicycles b
+     LEFT JOIN projects p ON p.project_id = (
+        SELECT p2.project_id
+        FROM projects p2
+        WHERE p2.bicycle_id = b.bicycle_id AND p2.user_id = b.user_id
+        ORDER BY p2.created_at DESC, p2.project_id DESC
+        LIMIT 1
+     )
+     LEFT JOIN (
+        SELECT
+            project_id,
+            MAX(bicycle_type) AS bicycle_type,
+            MAX(bicycle_brand) AS bicycle_brand,
+            MAX(bicycle_model) AS bicycle_model
+        FROM builder_plans
+        GROUP BY project_id
+     ) bp ON bp.project_id = p.project_id
+     LEFT JOIN (
+        SELECT
+            project_id,
+            COUNT(*) AS selected_parts,
+            COALESCE(SUM(price), 0) AS planned_cost
+        FROM project_build_parts
+        GROUP BY project_id
+     ) parts ON parts.project_id = p.project_id
+     WHERE b.user_id = ?
+     ORDER BY b.created_at DESC"
+);
 $stmt->execute(array($userId));
 $garageItems = $stmt->fetchAll();
 
-$stmt = $pdo->prepare("SELECT p.project_id, p.project_name, p.budget_amount, p.status, bp.bicycle_type, bp.bicycle_brand, bp.bicycle_model, COUNT(pbp.build_part_id) AS selected_parts, COALESCE(SUM(pbp.price),0) AS planned_cost FROM projects p LEFT JOIN builder_plans bp ON bp.project_id = p.project_id LEFT JOIN project_build_parts pbp ON pbp.project_id = p.project_id WHERE p.user_id = ? AND (p.bicycle_id IS NULL OR p.bicycle_id = 0) GROUP BY p.project_id ORDER BY p.created_at DESC LIMIT 8");
+$stmt = $pdo->prepare(
+    "SELECT
+        p.project_id,
+        p.project_name,
+        p.budget_amount,
+        p.status,
+        bp.bicycle_type,
+        bp.bicycle_brand,
+        bp.bicycle_model,
+        COALESCE(parts.selected_parts, 0) AS selected_parts,
+        COALESCE(parts.planned_cost, 0) AS planned_cost
+     FROM projects p
+     LEFT JOIN (
+        SELECT
+            project_id,
+            MAX(bicycle_type) AS bicycle_type,
+            MAX(bicycle_brand) AS bicycle_brand,
+            MAX(bicycle_model) AS bicycle_model
+        FROM builder_plans
+        GROUP BY project_id
+     ) bp ON bp.project_id = p.project_id
+     LEFT JOIN (
+        SELECT
+            project_id,
+            COUNT(*) AS selected_parts,
+            COALESCE(SUM(price), 0) AS planned_cost
+        FROM project_build_parts
+        GROUP BY project_id
+     ) parts ON parts.project_id = p.project_id
+     WHERE p.user_id = ? AND (p.bicycle_id IS NULL OR p.bicycle_id = 0)
+     ORDER BY p.created_at DESC
+     LIMIT 8"
+);
 $stmt->execute(array($userId));
 $unassignedPlans = $stmt->fetchAll();
 
@@ -38,6 +113,27 @@ $remainingSavings = max(0, $totalBudget - $totalSavings);
 
 require __DIR__ . '/includes/header.php';
 ?>
+
+<style>
+.dashboard-garage-card{background:#fff;border:1px solid #dce9e1;border-radius:12px;padding:20px;margin-bottom:14px;box-shadow:0 5px 18px rgba(20,60,40,.04)}
+.dashboard-garage-bike{display:flex;align-items:center;gap:14px}
+.dashboard-garage-bike .project-bike-icon{flex-shrink:0}
+.dashboard-garage-bike h3{margin:0 0 5px}
+.dashboard-garage-bike p{margin:3px 0;color:#64766c;font-size:13px}
+.dashboard-garage-plan{display:flex;justify-content:space-between;align-items:center;gap:15px;background:#f7faf8;border:1px solid #e7eee9;border-radius:9px;padding:14px;margin-top:17px}
+.dashboard-garage-plan h4{margin:0 0 6px;font-size:13px}
+.dashboard-garage-plan p{margin:4px 0;color:#64766c;font-size:12px}
+.dashboard-garage-plan-info{min-width:0}
+.dashboard-garage-plan-cost{text-align:right;flex-shrink:0}
+.dashboard-garage-plan-cost span{display:block;color:#64766c;font-size:11px}
+.dashboard-garage-plan-cost strong{display:block;color:#087747;font-size:18px;margin:5px 0}
+.dashboard-garage-plan-cost small{display:block;color:#64766c;font-size:11px}
+.dashboard-garage-plan-cost a{display:inline-block;margin-top:8px;color:#087747;font-size:12px;font-weight:600;text-decoration:none}
+.dashboard-garage-empty{margin-top:15px;padding:12px;background:#f7faf8;border:1px dashed #cbded1;border-radius:8px;color:#64766c;font-size:12px}
+.dashboard-unassigned{margin-top:20px}
+.dashboard-unassigned .project-card{margin-bottom:12px}
+@media(max-width:650px){.dashboard-garage-plan{align-items:flex-start;flex-direction:column}.dashboard-garage-plan-cost{text-align:left}}
+</style>
 
 <div class="dashboard-header">
     <div>
@@ -108,87 +204,77 @@ require __DIR__ . '/includes/header.php';
             <a class="dashboard-new-build" href="<?= h(url('builder/index.php')) ?>">＋ Build Your First Bike</a>
         </div>
     <?php else: ?>
-        <div class="project-list">
-            <?php
-            $displayedBicycles = array();
-            foreach ($garageItems as $item):
-                $bicycleId = (int)$item['bicycle_id'];
-                if (!isset($displayedBicycles[$bicycleId])):
-                    $displayedBicycles[$bicycleId] = true;
-            ?>
-                <article class="project-card">
-                    <div class="project-card-main">
-                        <div class="project-bike-icon">🚲</div>
-                        <div class="project-card-details">
-                            <h3><?= h($item['bicycle_name']) ?></h3>
-                            <p>
-                                <?= h($item['bicycle_type']) ?>
-                                <?= $item['brand'] ? ' · ' . h($item['brand']) : '' ?>
-                                <?= $item['model'] ? ' · ' . h($item['model']) : '' ?>
-                            </p>
-                        </div>
+        <?php foreach ($garageItems as $item): ?>
+            <article class="dashboard-garage-card">
+                <div class="dashboard-garage-bike">
+                    <div class="project-bike-icon">🚲</div>
+                    <div class="project-card-details">
+                        <h3><?= h($item['bicycle_name']) ?></h3>
+                        <p>
+                            <?= h($item['bicycle_type']) ?>
+                            <?= !empty($item['brand']) ? ' · ' . h($item['brand']) : '' ?>
+                            <?= !empty($item['model']) ? ' · ' . h($item['model']) : '' ?>
+                        </p>
                     </div>
-                    <div class="project-card-budget">
-                        <span>My Bicycle</span>
-                        <strong><?= h($item['bicycle_type']) ?></strong>
-                        <a href="<?= h(url('bicycles.php')) ?>">Manage in Garage →</a>
-                    </div>
-                </article>
-                <?php endif; ?>
+                </div>
 
                 <?php if (!empty($item['project_id'])): ?>
-                    <article class="project-card">
-                        <div class="project-card-main">
-                            <div class="project-bike-icon">🔧</div>
-                            <div class="project-card-details">
-                                <h3><?= h($item['project_name']) ?></h3>
-                                <p>
-                                    <?= h($item['plan_bicycle_type'] ? $item['plan_bicycle_type'] : $item['bicycle_type']) ?>
-                                    <?= $item['bicycle_brand'] ? ' · ' . h($item['bicycle_brand']) : '' ?>
-                                    <?= $item['bicycle_model'] ? ' · ' . h($item['bicycle_model']) : '' ?>
-                                </p>
-                                <p><?= (int)$item['selected_parts'] ?> part(s) selected · <?= h($item['status']) ?></p>
-                            </div>
+                    <div class="dashboard-garage-plan">
+                        <div class="dashboard-garage-plan-info">
+                            <h4><?= h($item['project_name']) ?></h4>
+                            <p>
+                                <?= h($item['plan_bicycle_type'] ? $item['plan_bicycle_type'] : $item['bicycle_type']) ?>
+                                <?= !empty($item['bicycle_brand']) ? ' · ' . h($item['bicycle_brand']) : '' ?>
+                                <?= !empty($item['bicycle_model']) ? ' · ' . h($item['bicycle_model']) : '' ?>
+                            </p>
+                            <p><?= (int)$item['selected_parts'] ?> part(s) selected · <?= h($item['status']) ?></p>
                         </div>
-                        <div class="project-card-budget">
+                        <div class="dashboard-garage-plan-cost">
                             <span>Estimated Build Cost</span>
                             <strong><?= money($item['planned_cost']) ?></strong>
                             <small>Target budget: <?= money($item['budget_amount']) ?></small>
                             <a href="<?= h(url('builder/index.php?project_id=' . (int)$item['project_id'])) ?>">Edit Build Plan →</a>
                         </div>
-                    </article>
+                    </div>
+                <?php else: ?>
+                    <div class="dashboard-garage-empty">No saved build plan is associated with this bicycle yet.</div>
                 <?php endif; ?>
-            <?php endforeach; ?>
+            </article>
+        <?php endforeach; ?>
 
-            <?php foreach ($unassignedPlans as $plan): ?>
-                <article class="project-card">
-                    <div class="project-card-main">
-                        <div class="project-bike-icon">🔧</div>
-                        <div class="project-card-details">
-                            <h3><?= h($plan['project_name']) ?></h3>
-                            <p>
-                                <?= h($plan['bicycle_type'] ? $plan['bicycle_type'] : 'Custom Build') ?>
-                                <?= $plan['bicycle_brand'] ? ' · ' . h($plan['bicycle_brand']) : '' ?>
-                                <?= $plan['bicycle_model'] ? ' · ' . h($plan['bicycle_model']) : '' ?>
-                            </p>
-                            <p><?= (int)$plan['selected_parts'] ?> part(s) selected · <?= h($plan['status']) ?> · Not linked to a bicycle</p>
+        <?php if ($unassignedPlans): ?>
+            <div class="dashboard-unassigned">
+                <div class="section-heading">
+                    <div>
+                        <h3>Other Saved Build Plans</h3>
+                        <p>Plans that are not linked to a bicycle profile.</p>
+                    </div>
+                </div>
+                <?php foreach ($unassignedPlans as $plan): ?>
+                    <article class="project-card">
+                        <div class="project-card-main">
+                            <div class="project-bike-icon">🔧</div>
+                            <div class="project-card-details">
+                                <h3><?= h($plan['project_name']) ?></h3>
+                                <p>
+                                    <?= h($plan['bicycle_type'] ? $plan['bicycle_type'] : 'Custom Build') ?>
+                                    <?= !empty($plan['bicycle_brand']) ? ' · ' . h($plan['bicycle_brand']) : '' ?>
+                                    <?= !empty($plan['bicycle_model']) ? ' · ' . h($plan['bicycle_model']) : '' ?>
+                                </p>
+                                <p><?= (int)$plan['selected_parts'] ?> part(s) selected · <?= h($plan['status']) ?> · Not linked to a bicycle</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="project-card-budget">
-                        <span>Estimated Build Cost</span>
-                        <strong><?= money($plan['planned_cost']) ?></strong>
-                        <small>Target budget: <?= money($plan['budget_amount']) ?></small>
-                        <a href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Build Plan →</a>
-                    </div>
-                </article>
-            <?php endforeach; ?>
-        </div>
+                        <div class="project-card-budget">
+                            <span>Estimated Build Cost</span>
+                            <strong><?= money($plan['planned_cost']) ?></strong>
+                            <small>Target budget: <?= money($plan['budget_amount']) ?></small>
+                            <a href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Build Plan →</a>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
-
-    <div class="section-heading" style="margin-top:24px;">
-        <p>Manage your bicycle profiles and all their saved build plans in one place.</p>
-        <a href="<?= h(url('bicycles.php')) ?>">Go to My Garage →</a>
-    </div>
 </section>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

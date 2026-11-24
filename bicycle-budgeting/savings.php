@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -11,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($csrfToken)) {
         $errors[] = 'Session expired. Refresh and try again.';
     }
-
     $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
     $amountInput = isset($_POST['amount']) ? $_POST['amount'] : null;
     $amount = filter_var($amountInput, FILTER_VALIDATE_FLOAT);
@@ -20,29 +20,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $stmt = $pdo->prepare('SELECT project_id FROM projects WHERE project_id = ? AND user_id = ?');
     $stmt->execute(array($projectId, $userId));
-
     if (!$stmt->fetch()) {
         $errors[] = 'Choose one of your bicycle plans.';
     }
-
     if ($amount === false || $amount <= 0) {
         $errors[] = 'Enter an amount greater than zero.';
     }
-
     $dateObject = DateTime::createFromFormat('Y-m-d', $date);
     if (!$dateObject || $dateObject->format('Y-m-d') !== $date) {
         $errors[] = 'Enter a valid date.';
     }
-
     if (!$errors) {
         $stmt = $pdo->prepare('INSERT INTO savings_records (user_id, project_id, amount, saving_date, notes) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute(array(
-            $userId,
-            $projectId,
-            $amount,
-            $date,
-            $notes !== '' ? $notes : null
-        ));
+        $stmt->execute(array($userId, $projectId, $amount, $date, $notes !== '' ? $notes : null));
         set_flash('success', 'Savings record added.');
         redirect('savings.php');
     }
@@ -74,8 +64,9 @@ require __DIR__ . '/includes/header.php';
         <h1>Savings Tracker</h1>
         <p>Record money saved for your bicycle build plans.</p>
     </div>
+    <button type="button" class="user-guide-trigger" id="startUserGuide">ⓘ How to Use</button>
 </div>
-<section class="dashboard-stats">
+<section class="dashboard-stats" data-guide="savings-overview">
     <article class="stat-card">
         <span>Total Savings</span>
         <h2><?= money($totalSavings) ?></h2>
@@ -102,7 +93,7 @@ require __DIR__ . '/includes/header.php';
     <?php else: ?>
         <form method="post" class="form-grid">
             <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
-            <div class="form-group">
+            <div class="form-group" data-guide="savings-project">
                 <label>Bicycle Build</label>
                 <select name="project_id" required>
                     <option value="">Choose build</option>
@@ -111,23 +102,23 @@ require __DIR__ . '/includes/header.php';
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="form-group">
+            <div class="form-group" data-guide="savings-amount">
                 <label>Amount Saved (₱)</label>
                 <input type="number" name="amount" min="0.01" step="0.01" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" data-guide="savings-date">
                 <label>Date</label>
                 <input type="date" name="saving_date" value="<?= date('Y-m-d') ?>" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" data-guide="savings-notes">
                 <label>Notes (Optional)</label>
                 <input name="notes" maxlength="255" placeholder="Example: Weekly savings">
             </div>
-            <button class="btn" type="submit">Record Savings</button>
+            <button class="btn" type="submit" data-guide="savings-save">Record Savings</button>
         </form>
     <?php endif; ?>
 </section>
-<section class="dashboard-projects">
+<section class="dashboard-projects" data-guide="savings-history">
     <div class="section-heading">
         <div>
             <h2>Savings History</h2>
@@ -151,4 +142,26 @@ require __DIR__ . '/includes/header.php';
         </div>
     <?php endif; ?>
 </section>
+<div class="user-guide-backdrop" id="userGuideBackdrop" hidden></div>
+<div class="user-guide-panel" id="userGuidePanel" role="dialog" aria-modal="true" aria-labelledby="userGuideTitle" hidden>
+    <div class="user-guide-panel-top">
+        <div>
+            <p class="user-guide-label" id="userGuideCount">HOW TO USE</p>
+            <h3 id="userGuideTitle">Savings Guide</h3>
+        </div>
+        <button type="button" class="user-guide-close" id="userGuideClose" aria-label="Close guide">×</button>
+    </div>
+    <p id="userGuideText"></p>
+    <div class="user-guide-progress">
+        <div class="user-guide-progress-fill" id="userGuideProgress"></div>
+    </div>
+    <div class="user-guide-panel-actions">
+        <span class="user-guide-counter" id="userGuideCounter"></span>
+        <div class="user-guide-buttons">
+            <button type="button" class="user-guide-button" id="userGuidePrevious">Previous</button>
+            <button type="button" class="user-guide-button primary" id="userGuideNext">Next</button>
+        </div>
+    </div>
+</div>
+<script src="<?= h(url('assets/js/user-guide.js')) ?>?v=<?= APP_VERSION ?>"></script>
 <?php require __DIR__ . '/includes/footer.php'; ?>

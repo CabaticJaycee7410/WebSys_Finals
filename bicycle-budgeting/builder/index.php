@@ -30,7 +30,6 @@ if ($projectId > 0) {
 
     foreach ($stmt->fetchAll() as $part) {
         $compatibility = json_decode((string)$part['compatibility_json'], true);
-
         $initialParts[$part['component_key']] = array(
             'component_key' => $part['component_key'],
             'component_label' => $part['component_label'],
@@ -173,6 +172,7 @@ require __DIR__ . '/../includes/header.php';
             <p>Choose a bicycle type, select its components, compare listings, and save your plan.</p>
         </div>
         <div class="builder-heading-actions">
+            <button type="button" class="user-guide-trigger" id="startUserGuide">ⓘ How to Use</button>
             <span class="builder-autosave-indicator" id="draftSaveStatus">Draft saved locally</span>
             <a class="builder-exit-link" href="<?= h(url('bicycles.php')) ?>">Back to My Garage</a>
         </div>
@@ -198,17 +198,10 @@ require __DIR__ . '/../includes/header.php';
         <div class="builder-details-grid">
             <label>
                 Select an Existing Bicycle (Optional)
-                <select id="savedBicycle">
+                <select id="savedBicycle" data-guide="builder-existing-bike">
                     <option value="">Create a new bicycle build</option>
                     <?php foreach ($bicycles as $bicycle): ?>
-                        <option
-                            value="<?= (int)$bicycle['bicycle_id'] ?>"
-                            data-type="<?= h($bicycle['bicycle_type']) ?>"
-                            data-brand="<?= h($bicycle['brand']) ?>"
-                            data-model="<?= h($bicycle['model']) ?>"
-                            data-name="<?= h($bicycle['bicycle_name']) ?>"
-                            <?= isset($initial['bicycleId']) && $initial['bicycleId'] == $bicycle['bicycle_id'] ? 'selected' : '' ?>
-                        >
+                        <option value="<?= (int)$bicycle['bicycle_id'] ?>" data-type="<?= h($bicycle['bicycle_type']) ?>" data-brand="<?= h($bicycle['brand']) ?>" data-model="<?= h($bicycle['model']) ?>" data-name="<?= h($bicycle['bicycle_name']) ?>" <?= isset($initial['bicycleId']) && $initial['bicycleId'] == $bicycle['bicycle_id'] ? 'selected' : '' ?>>
                             <?= h($bicycle['bicycle_name']) ?> - <?= h($bicycle['bicycle_type']) ?>
                         </option>
                     <?php endforeach; ?>
@@ -216,7 +209,7 @@ require __DIR__ . '/../includes/header.php';
             </label>
         </div>
 
-        <div class="bike-type-grid" id="bikeTypeGrid">
+        <div class="bike-type-grid" id="bikeTypeGrid" data-guide="builder-bike-type">
             <?php foreach ($bikeTypes as $type): ?>
                 <button type="button" class="bike-type-card" data-bike-type="<?= h($type) ?>">
                     <span class="bike-type-icon">🚲</span>
@@ -226,7 +219,7 @@ require __DIR__ . '/../includes/header.php';
             <?php endforeach; ?>
         </div>
 
-        <div class="builder-details-grid">
+        <div class="builder-details-grid" data-guide="builder-details">
             <label>
                 Bicycle Name
                 <input type="text" id="bicycleName" maxlength="150" placeholder="Example: My Dream Bike">
@@ -284,7 +277,7 @@ require __DIR__ . '/../includes/header.php';
             <div><span>Target Budget</span><strong id="modelTargetBudget">Not set</strong></div>
         </div>
 
-        <div class="builder-workspace">
+        <div class="builder-workspace" data-guide="builder-model">
             <div class="builder-bike-panel">
                 <div class="builder-panel-heading">
                     <h3 id="bikeDiagramLabel">Your 2D Bicycle</h3>
@@ -315,70 +308,30 @@ require __DIR__ . '/../includes/header.php';
                             <path id="bikeFrameShape" d="M155 255 L285 255 L235 125 L155 255 M285 255 L390 125 L545 255 L285 255 M235 125 L390 125" class="bike-frame-line"/>
                             <circle id="bikeHinge" cx="320" cy="190" r="11" class="bike-hinge" style="display:none"/>
                         </g>
-                        <g data-component="fork" class="bike-component-drawing">
-                            <path id="bikeForkShape" d="M390 125 L545 255" class="bike-fork-line"/>
-                        </g>
-                        <g data-component="stem" class="bike-component-drawing">
-                            <path id="bikeStemShape" d="M390 125 L420 89 L455 89" class="bike-stem-line"/>
-                        </g>
-                        <g data-component="handlebar" class="bike-component-drawing">
-                            <path id="bikeHandlebarShape" d="M455 89 L610 108" class="bike-handlebar-line"/>
-                        </g>
-                        <g data-component="headset" class="bike-component-drawing">
-                            <circle cx="390" cy="125" r="10" class="bike-detail-shape"/>
-                        </g>
-                        <g data-component="grips" class="bike-component-drawing">
-                            <path d="M455 89 L443 87 M610 108 L623 110" class="bike-detail-line"/>
-                        </g>
-                        <g data-component="seatpost" class="bike-component-drawing">
-                            <path d="M235 125 L235 102" class="bike-seatpost-line"/>
-                        </g>
-                        <g data-component="saddle" class="bike-component-drawing">
-                            <path d="M195 102 L260 102" class="bike-saddle-line"/>
-                        </g>
-                        <g data-component="bottom_bracket" class="bike-component-drawing">
-                            <circle cx="285" cy="255" r="12" class="bike-detail-shape"/>
-                        </g>
+                        <g data-component="fork" class="bike-component-drawing"><path id="bikeForkShape" d="M390 125 L545 255" class="bike-fork-line"/></g>
+                        <g data-component="stem" class="bike-component-drawing"><path id="bikeStemShape" d="M390 125 L420 89 L455 89" class="bike-stem-line"/></g>
+                        <g data-component="handlebar" class="bike-component-drawing"><path id="bikeHandlebarShape" d="M455 89 L610 108" class="bike-handlebar-line"/></g>
+                        <g data-component="headset" class="bike-component-drawing"><circle cx="390" cy="125" r="10" class="bike-detail-shape"/></g>
+                        <g data-component="grips" class="bike-component-drawing"><path d="M455 89 L443 87 M610 108 L623 110" class="bike-detail-line"/></g>
+                        <g data-component="seatpost" class="bike-component-drawing"><path d="M235 125 L235 102" class="bike-seatpost-line"/></g>
+                        <g data-component="saddle" class="bike-component-drawing"><path d="M195 102 L260 102" class="bike-saddle-line"/></g>
+                        <g data-component="bottom_bracket" class="bike-component-drawing"><circle cx="285" cy="255" r="12" class="bike-detail-shape"/></g>
                         <g data-component="crankset" class="bike-component-drawing">
                             <circle cx="285" cy="255" r="19" class="bike-crank-ring"/>
                             <path d="M285 255 L328 292" class="bike-crank-arm"/>
                         </g>
-                        <g data-component="pedals" class="bike-component-drawing">
-                            <path d="M320 292 L343 292" class="bike-detail-line"/>
-                        </g>
-                        <g data-component="chain" class="bike-component-drawing">
-                            <path d="M315 255 L155 255" class="bike-chain-line"/>
-                        </g>
-                        <g data-component="cassette" class="bike-component-drawing">
-                            <circle cx="155" cy="255" r="18" class="bike-detail-shape"/>
-                        </g>
-                        <g data-component="shifter" class="bike-component-drawing">
-                            <rect x="585" y="94" width="13" height="8" rx="3" class="bike-detail-shape"/>
-                        </g>
-                        <g data-component="front_derailleur" class="bike-component-drawing">
-                            <path d="M325 245 L345 240 L350 255" class="bike-derailleur-line"/>
-                        </g>
-                        <g data-component="rear_derailleur" class="bike-component-drawing">
-                            <path d="M155 255 L175 281 L160 300" class="bike-derailleur-line"/>
-                        </g>
-                        <g data-component="front_brake" class="bike-component-drawing">
-                            <path d="M535 181 L550 181" class="bike-brake-line"/>
-                        </g>
-                        <g data-component="rear_brake" class="bike-component-drawing">
-                            <path d="M145 181 L160 181" class="bike-brake-line"/>
-                        </g>
-                        <g data-component="motor" class="bike-component-drawing">
-                            <circle cx="285" cy="225" r="20" class="bike-detail-shape"/>
-                        </g>
-                        <g data-component="battery" class="bike-component-drawing">
-                            <rect x="305" y="150" width="26" height="75" rx="6" class="bike-detail-shape"/>
-                        </g>
-                        <g data-component="controller" class="bike-component-drawing">
-                            <rect x="590" y="78" width="18" height="10" rx="3" class="bike-detail-shape"/>
-                        </g>
-                        <g data-component="cargo_rack" class="bike-component-drawing">
-                            <path d="M92 145 L210 145 L220 160 M110 145 L110 175" class="bike-detail-line"/>
-                        </g>
+                        <g data-component="pedals" class="bike-component-drawing"><path d="M320 292 L343 292" class="bike-detail-line"/></g>
+                        <g data-component="chain" class="bike-component-drawing"><path d="M315 255 L155 255" class="bike-chain-line"/></g>
+                        <g data-component="cassette" class="bike-component-drawing"><circle cx="155" cy="255" r="18" class="bike-detail-shape"/></g>
+                        <g data-component="shifter" class="bike-component-drawing"><rect x="585" y="94" width="13" height="8" rx="3" class="bike-detail-shape"/></g>
+                        <g data-component="front_derailleur" class="bike-component-drawing"><path d="M325 245 L345 240 L350 255" class="bike-derailleur-line"/></g>
+                        <g data-component="rear_derailleur" class="bike-component-drawing"><path d="M155 255 L175 281 L160 300" class="bike-derailleur-line"/></g>
+                        <g data-component="front_brake" class="bike-component-drawing"><path d="M535 181 L550 181" class="bike-brake-line"/></g>
+                        <g data-component="rear_brake" class="bike-component-drawing"><path d="M145 181 L160 181" class="bike-brake-line"/></g>
+                        <g data-component="motor" class="bike-component-drawing"><circle cx="285" cy="225" r="20" class="bike-detail-shape"/></g>
+                        <g data-component="battery" class="bike-component-drawing"><rect x="305" y="150" width="26" height="75" rx="6" class="bike-detail-shape"/></g>
+                        <g data-component="controller" class="bike-component-drawing"><rect x="590" y="78" width="18" height="10" rx="3" class="bike-detail-shape"/></g>
+                        <g data-component="cargo_rack" class="bike-component-drawing"><path d="M92 145 L210 145 L220 160 M110 145 L110 175" class="bike-detail-line"/></g>
                         <?php foreach ($markers as $key => $position): ?>
                             <g class="bike-part-marker" data-component="<?= h($key) ?>" tabindex="0" role="button" aria-label="Choose <?= h($components[$key]) ?>" transform="translate(<?= (int)$position[0] ?> <?= (int)$position[1] ?>)">
                                 <circle class="bike-marker-circle" cx="0" cy="0" r="13"/>
@@ -410,7 +363,6 @@ require __DIR__ . '/../includes/header.php';
                         </button>
                     <?php endforeach; ?>
                 </div>
-
                 <p class="builder-message" id="modelMessage" role="status"></p>
             </div>
 
@@ -442,23 +394,19 @@ require __DIR__ . '/../includes/header.php';
             <span>Selected Component</span>
             <strong id="searchSelectedComponent">None selected</strong>
         </div>
-
         <p class="marketplace-connection-note" id="marketplaceConnectionNote" role="status">Checking marketplace connection...</p>
 
-        <form id="builderSearchForm" class="builder-live-search-form">
+        <form id="builderSearchForm" class="builder-live-search-form" data-guide="builder-search">
             <label for="productKeyword">Product Keyword (Optional)</label>
             <input type="text" id="productKeyword" placeholder="Example: Aluminum, Hydraulic, 31.8mm">
-
             <div class="builder-filter-heading">
                 <strong>How do you want to find this part?</strong>
                 <span>Choose one filter.</span>
             </div>
-
             <div class="builder-filter-tabs">
                 <button type="button" class="builder-filter-tab active" data-filter-mode="brand">Search by Brand</button>
                 <button type="button" class="builder-filter-tab" data-filter-mode="budget">Search by Budget</button>
             </div>
-
             <div id="brandFilterPanel" class="builder-filter-panel">
                 <label for="productBrand">Brand Name</label>
                 <input type="text" id="productBrand" list="productBrandOptions" placeholder="Example: Shimano, SRAM, Prowheel">
@@ -478,7 +426,6 @@ require __DIR__ . '/../includes/header.php';
                 </datalist>
                 <p class="builder-hint">Type a brand name or choose a suggestion.</p>
             </div>
-
             <div id="budgetFilterPanel" class="builder-filter-panel" hidden>
                 <label for="budgetPreset">Maximum Price</label>
                 <select id="budgetPreset">
@@ -493,7 +440,6 @@ require __DIR__ . '/../includes/header.php';
                 <label for="customBudget" id="customBudgetLabel" hidden>Enter Maximum Price (₱)</label>
                 <input type="number" id="customBudget" min="1" step="0.01" placeholder="Example: 750" hidden>
             </div>
-
             <button type="submit" class="builder-primary-button">Search Marketplace Listings</button>
         </form>
 
@@ -501,7 +447,6 @@ require __DIR__ . '/../includes/header.php';
             <span id="compatibilityFilterMessage"></span>
             <label><input type="checkbox" id="showAllSizesAnyway"> Show all results anyway</label>
         </div>
-
         <div class="builder-results-toolbar" id="builderResultsToolbar" hidden>
             <label for="productSort">
                 Sort results
@@ -514,7 +459,6 @@ require __DIR__ . '/../includes/header.php';
             </label>
             <button type="button" class="builder-secondary-button" id="loadMoreResults" hidden>Load More Results</button>
         </div>
-
         <div id="builderMessage" class="builder-search-status" role="status" aria-live="polite"></div>
         <div id="builderResults" class="builder-product-results"></div>
     </section>
@@ -527,9 +471,7 @@ require __DIR__ . '/../includes/header.php';
                 <p>Review this listing before adding its estimated price to your plan.</p>
             </div>
         </div>
-
-        <div id="confirmProductCard" class="confirm-product-card"></div>
-
+        <div id="confirmProductCard" class="confirm-product-card" data-guide="builder-confirm"></div>
         <div id="compatibilityWarning" class="compatibility-warning" hidden>
             <h3>⚠️ Let's Check That Fit First!</h3>
             <p>This part may not match something already selected on your bicycle.</p>
@@ -537,19 +479,17 @@ require __DIR__ . '/../includes/header.php';
             <button type="button" class="builder-secondary-button" id="findCompatibleParts">Find Compatible Alternatives</button>
             <button type="button" class="builder-warning-button" id="addAnyway">Add Anyway — Mark for Fit Review</button>
         </div>
-
         <div id="compatibilityReviewNote" class="compatibility-review-note" hidden>
             <strong>Specifications Not Verified</strong>
             <p>We couldn't verify all fit details for this listing. Check the product specifications before adding it.</p>
         </div>
-
         <div class="builder-step-actions">
             <button type="button" class="builder-secondary-button" id="cancelProductSelection">Cancel</button>
             <button type="button" class="builder-primary-button" id="confirmAddProduct">Add to My Bike</button>
         </div>
     </section>
 
-    <section class="builder-screen" id="step-review" data-step="review" hidden>
+    <section class="builder-screen" id="step-review" data-step="review" data-guide="builder-review" hidden>
         <div class="builder-section-heading">
             <div>
                 <p class="builder-eyebrow">STEP 5 OF 5</p>
@@ -558,28 +498,44 @@ require __DIR__ . '/../includes/header.php';
             </div>
             <button type="button" class="builder-secondary-button" id="backToModelFromReview">← Continue Building</button>
         </div>
-
         <div class="builder-review-summary">
             <div><span>Bicycle Type</span><strong id="reviewBikeType">Not selected</strong></div>
             <div><span>Target Budget</span><strong id="reviewBudget">₱0.00</strong></div>
             <div><span>Estimated Parts Total</span><strong id="reviewTotal">₱0.00</strong></div>
             <div><span>Remaining Budget</span><strong id="reviewRemaining">₱0.00</strong></div>
         </div>
-
         <div class="builder-review-heading">
             <h3>Selected Bicycle Parts</h3>
             <span id="reviewPartCount">0 parts</span>
         </div>
-
         <div id="reviewPartsList" class="builder-review-parts"></div>
         <p id="reviewBudgetMessage" class="builder-budget-message"></p>
         <p class="builder-message" id="savePlanMessage" role="status"></p>
-
         <div class="builder-step-actions builder-save-actions">
-            <button type="button" class="builder-secondary-button" id="deletePlanButton" hidden>Delete This Plan</button>
+            <button type="button" class="builder-secondary-button" id="cancelEditButton" hidden>Cancel</button>
             <button type="button" class="builder-primary-button" id="savePlanButton">Save Build Plan</button>
         </div>
     </section>
+
+    <div class="user-guide-backdrop" id="userGuideBackdrop" hidden></div>
+    <div class="user-guide-panel" id="userGuidePanel" role="dialog" aria-modal="true" aria-labelledby="userGuideTitle" aria-describedby="userGuideText" hidden>
+        <div class="user-guide-panel-top">
+            <span class="user-guide-label" id="userGuideCount"></span>
+            <button type="button" class="user-guide-close" id="userGuideClose" aria-label="Close guide">×</button>
+        </div>
+        <h3 id="userGuideTitle"></h3>
+        <p id="userGuideText"></p>
+        <div class="user-guide-progress">
+            <div class="user-guide-progress-fill" id="userGuideProgress"></div>
+        </div>
+        <div class="user-guide-panel-actions">
+            <span class="user-guide-counter" id="userGuideCounter"></span>
+            <div class="user-guide-buttons">
+                <button type="button" class="user-guide-button" id="userGuidePrevious">Previous</button>
+                <button type="button" class="user-guide-button primary" id="userGuideNext">Next</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -595,7 +551,6 @@ window.BICYCLE_BUILDER = <?= json_encode(array(
     'initial' => $initial
 ), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
 </script>
-
 <script src="<?= h(url('assets/js/builder.js')) ?>?v=<?= APP_VERSION ?>"></script>
-
+<script src="<?= h(url('assets/js/user-guide.js')) ?>?v=4"></script>
 <?php require __DIR__ . '/../includes/footer.php'; ?>
