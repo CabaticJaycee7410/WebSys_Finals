@@ -1,9 +1,16 @@
-<?php
 
+<?php
 require_once __DIR__ . '/../config/app.php';
 
 if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params(0, '/');
+    $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== '' && strtolower($_SERVER['HTTPS']) !== 'off';
+    if (!$isSecure && isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443) {
+        $isSecure = true;
+    }
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
+    ini_set('session.cookie_httponly', '1');
+    session_set_cookie_params(0, '/', '', $isSecure, true);
     session_start();
 }
 
@@ -31,8 +38,7 @@ function logged_in()
 function require_login()
 {
     if (!logged_in()) {
-        header('Location: ' . url('login.php'));
-        exit;
+        redirect('login.php');
     }
 }
 
@@ -49,10 +55,8 @@ function get_flash()
     if (!isset($_SESSION['flash_message'])) {
         return null;
     }
-
     $message = $_SESSION['flash_message'];
     unset($_SESSION['flash_message']);
-
     return $message;
 }
 
@@ -67,11 +71,17 @@ function csrf_token()
     if (empty($_SESSION['csrf_token'])) {
         if (function_exists('random_bytes')) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        } elseif (function_exists('openssl_random_pseudo_bytes')) {
+            $strong = false;
+            $bytes = openssl_random_pseudo_bytes(32, $strong);
+            if ($bytes === false || !$strong) {
+                throw new Exception('A secure random generator is unavailable.');
+            }
+            $_SESSION['csrf_token'] = bin2hex($bytes);
         } else {
-            $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+            throw new Exception('A secure random generator is unavailable.');
         }
     }
-
     return $_SESSION['csrf_token'];
 }
 

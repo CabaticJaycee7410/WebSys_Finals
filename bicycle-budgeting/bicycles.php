@@ -135,29 +135,36 @@ require __DIR__ . '/includes/header.php';
 
 <style>
 .garage-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0}
-.garage-stat{background:#fff;border:1px solid #dce9e1;border-top:3px solid #15945d;border-radius:11px;padding:18px;box-shadow:0 5px 18px rgba(20,60,40,.05)}
-.garage-stat span{display:block;font-size:12px;color:#64766c}
-.garage-stat strong{display:block;font-size:24px;color:#087747;margin-top:9px}
-.garage-bike-card{background:#fff;border:1px solid #dce9e1;border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 5px 18px rgba(20,60,40,.04)}
+.garage-stat{background:rgba(22,68,93,.67);border:1px solid rgba(120,205,220,.24);border-top:3px solid #08b9d0;border-radius:13px;padding:18px;box-shadow:0 8px 25px rgba(0,15,30,.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.garage-stat span{display:block;font-size:12px;color:#a9cbd6}
+.garage-stat strong{display:block;font-size:24px;color:#53d9e8;margin-top:9px}
+.garage-stat small{display:block;margin-top:5px;color:#91b8c5;font-size:11px}
+.garage-bike-card{background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);border-radius:14px;padding:20px;margin-bottom:17px;box-shadow:0 9px 28px rgba(0,15,30,.22);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);transition:background .2s,border-color .2s,transform .2s}
+.garage-bike-card:hover{background:rgba(29,83,106,.76);border-color:rgba(8,197,216,.4);transform:translateY(-2px)}
 .garage-bike-top{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,.7fr);align-items:center;gap:18px}
 .garage-bike-info{display:flex;align-items:center;gap:14px;min-width:0}
-.garage-bike-icon{width:50px;height:50px;display:grid;place-items:center;background:#e6f5ec;border-radius:12px;font-size:25px;flex-shrink:0}
-.garage-bike-info h3{margin:0 0 5px;font-size:16px}
-.garage-bike-info p,.garage-bike-info small{margin:3px 0;color:#64766c;font-size:12px}
-.garage-bike-type span{display:block;font-size:11px;color:#64766c;margin-bottom:5px}
-.garage-bike-type strong{color:#087747}
-.garage-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid #d2e2d8;border-radius:7px;padding:8px 12px;background:#fff;color:#176b48;text-decoration:none;font-size:12px;font-weight:600;cursor:pointer}
-.garage-button:hover{background:#edf7f1}
-.garage-button.danger{color:#b42318;border-color:#f0d2cf}
-.garage-plans{border-top:1px solid #edf1ed;margin-top:17px;padding-top:15px}
-.garage-plans h4{font-size:13px;margin:0 0 12px}
-.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:13px;background:#f7faf8;border:1px solid #e7eee9;border-radius:9px;margin-top:9px}
-.garage-plan h5{font-size:13px;margin:0 0 6px}
-.garage-plan p{font-size:11px;color:#64766c;margin:3px 0}
+.garage-bike-icon{width:54px;height:54px;display:grid;place-items:center;background:rgba(8,185,208,.17);border:1px solid rgba(8,197,216,.3);border-radius:13px;font-size:25px;flex-shrink:0}
+.garage-bike-info h3{margin:0 0 5px;font-size:17px;color:#e0f5f8}
+.garage-bike-info p,.garage-bike-info small{margin:3px 0;color:#a9cbd6;font-size:12px}
+.garage-bike-type span{display:block;font-size:11px;color:#91b8c5;margin-bottom:5px}
+.garage-bike-type strong{color:#53d9e8}
+.garage-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(120,205,220,.27);border-radius:8px;padding:9px 13px;background:rgba(35,101,122,.4);color:#c8edf1;text-decoration:none;font-size:12px;font-weight:700;cursor:pointer;transition:.2s}
+.garage-button:hover{background:rgba(8,185,208,.25);border-color:#08b9d0;color:#e9fbfd}
+.garage-button.danger{color:#ffb9c1;border-color:rgba(220,83,100,.35);background:rgba(220,53,69,.15)}
+.garage-button.danger:hover{background:rgba(185,54,74,.7);color:#ffe9ec}
+.garage-plans{border-top:1px solid rgba(120,205,220,.2);margin-top:19px;padding-top:17px}
+.garage-plans h4{font-size:13px;margin:0 0 12px;color:#8cecf3}
+.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:10px;margin-top:9px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.garage-plan h5{font-size:13px;margin:0 0 6px;color:#e0f5f8}
+.garage-plan p{font-size:11px;color:#a9cbd6;margin:4px 0}
 .garage-plan-actions{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
-.garage-empty{padding:20px;text-align:center;color:#64766c;background:#f8fbf9;border:1px dashed #cbded1;border-radius:10px;font-size:12px}
+.garage-plan-actions form{margin:0}
+.garage-empty{padding:20px;text-align:center;color:#a9cbd6;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:10px;font-size:12px}
 .garage-unassigned{margin-top:25px}
 .dashboard-guide-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.garage-bike-card .garage-plans,.garage-bike-card .garage-plan,.garage-bike-card .garage-empty{color:#d4edf1}
+.garage-bike-card .garage-plan strong,.garage-bike-card .garage-plan h5{color:#e0f5f8}
+.garage-bike-card .garage-plan p{color:#a9cbd6}
 @media(max-width:800px){.garage-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.garage-bike-top{grid-template-columns:1fr}.garage-plan{align-items:flex-start;flex-direction:column}}
 @media(max-width:480px){.garage-stats{grid-template-columns:1fr}.dashboard-guide-actions{width:100%}.dashboard-guide-actions a,.dashboard-guide-actions button{width:100%}}
 </style>
