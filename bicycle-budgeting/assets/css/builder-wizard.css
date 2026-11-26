@@ -1,32 +1,36 @@
-
-.builder-wizard{max-width:1240px;margin:0 auto 45px;color:#eaf4fa}
+.builder-wizard{height:calc(100vh - 85px);height:calc(100svh - 85px);max-width:1240px;margin:0 auto;color:#eaf4fa;display:flex;flex-direction:column;overflow:hidden}
 .builder-wizard [hidden],.builder-screen[hidden]{display:none!important}
 .builder-wizard-heading,.builder-section-heading,.builder-step-actions,.builder-panel-heading,.builder-review-heading{display:flex;justify-content:space-between;align-items:center;gap:18px}
-.builder-wizard-heading{margin:25px 0}
+.builder-wizard-heading{flex-shrink:0;margin:12px 0}
 .builder-heading-actions{display:flex;align-items:center;gap:16px}
 .builder-autosave-indicator{color:#9bb2c5;font-size:11px;white-space:nowrap}
 .builder-wizard-heading h1,.builder-section-heading h2{margin:4px 0 8px;color:#f1f8fc}
 .builder-wizard-heading p,.builder-section-heading p{margin:0;color:#a9bfd0}
 .builder-eyebrow{color:#08b9d0!important;font-size:11px;font-weight:800;letter-spacing:1.2px}
 .builder-exit-link{color:#08b9d0;font-weight:700}
-.builder-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin:25px 0}
+.builder-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;flex-shrink:0;margin:10px 0 14px}
 .builder-progress-step{display:flex;align-items:center;gap:8px;padding:10px;border-bottom:3px solid rgba(174,204,224,.2);color:#91a9bd;font-size:13px;font-weight:700}
 .builder-progress-step span{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#203f59;color:#c5d8e6}
 .builder-progress-step.active,.builder-progress-step.completed{border-color:#08b9d0;color:#43d8e8}
 .builder-progress-step.active span,.builder-progress-step.completed span{background:#08b9d0;color:#08243b}
-.builder-screen{padding:25px;background:rgba(12,38,61,.72);border:1px solid rgba(154,194,220,.2);border-radius:18px;box-shadow:0 8px 26px rgba(0,0,0,.16);backdrop-filter:blur(16px)}
+.builder-screen{padding:20px;background:rgba(12,38,61,.72);border:1px solid rgba(154,194,220,.2);border-radius:18px;box-shadow:0 8px 26px rgba(0,0,0,.16);backdrop-filter:blur(16px)}
+.builder-screen.active{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#087f98 rgba(16,45,71,.4)}
+.builder-screen.active::-webkit-scrollbar{width:7px}
+.builder-screen.active::-webkit-scrollbar-thumb{background:#087f98;border-radius:10px}
 .builder-section-heading{margin-bottom:22px}
 .bike-type-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.bike-type-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:9px;min-height:104px;padding:16px;text-align:left;background:rgba(21,55,80,.72);border:1px solid rgba(154,194,220,.2);border-radius:13px;color:#eaf4fa;cursor:pointer;transition:.18s}
+.bike-type-card{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:125px;padding:13px;text-align:center;background:rgba(21,55,80,.72);border:1px solid rgba(154,194,220,.2);border-radius:13px;color:#eaf4fa;cursor:pointer;transition:.18s}
 .bike-type-card:hover,.bike-type-card.selected{border-color:#08b9d0;background:rgba(8,185,208,.14);box-shadow:0 4px 13px rgba(8,185,208,.12)}
-.bike-type-icon{font-size:23px}
-.bike-type-card strong{font-size:14px;color:#f1f8fc}
+.bike-type-icon{display:grid;place-items:center;width:100%;height:55px}
+.bike-type-icon svg{width:85px;height:55px;overflow:visible;fill:none;stroke:#45d4e3;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.bike-type-card.selected .bike-type-icon svg{stroke:#fff}
+.bike-type-card strong{width:100%;font-size:14px;color:#f1f8fc;text-align:center}
 .bike-type-check{position:absolute;top:10px;right:12px;display:none;color:#08c5d8;font-weight:900}
 .bike-type-card.selected .bike-type-check{display:block}
 .builder-details-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:24px;padding:20px;background:rgba(17,48,72,.75);border:1px solid rgba(154,194,220,.16);border-radius:13px}
 .builder-details-grid label,.builder-live-search-form label{display:flex;flex-direction:column;gap:7px;color:#d8e8f2;font-size:13px;font-weight:700}
-.builder-details-grid input,.builder-live-search-form input,.builder-live-search-form select{width:100%;min-height:43px;padding:10px 12px;border:1px solid rgba(154,194,220,.25);border-radius:8px;background:#102d47;color:#f1f8fc;box-sizing:border-box}
-.builder-details-grid input:focus,.builder-live-search-form input:focus,.builder-live-search-form select:focus{outline:2px solid rgba(8,185,208,.25);border-color:#08b9d0}
+.builder-details-grid input,.builder-details-grid select,.builder-live-search-form input,.builder-live-search-form select{width:100%;min-height:43px;padding:10px 12px;border:1px solid rgba(154,194,220,.25);border-radius:8px;background:#102d47;color:#f1f8fc;box-sizing:border-box}
+.builder-details-grid input:focus,.builder-details-grid select:focus,.builder-live-search-form input:focus,.builder-live-search-form select:focus{outline:2px solid rgba(8,185,208,.25);border-color:#08b9d0}
 .builder-step-actions{margin-top:22px}
 .builder-note,.builder-hint{color:#9bb2c5;font-size:12px}
 .builder-primary-button,.builder-secondary-button,.builder-warning-button{min-height:42px;padding:11px 17px;border:0;border-radius:9px;font-weight:700;cursor:pointer;transition:.18s}
@@ -49,7 +53,7 @@
 .builder-panel-heading{margin-bottom:12px}
 .builder-panel-heading h3,.builder-side-panel h3{margin:0;color:#eaf4fa}
 .interactive-bike-canvas{padding:12px;background:linear-gradient(150deg,#193c58,#102d47);border:1px solid rgba(154,194,220,.16);border-radius:13px;overflow:hidden}
-.interactive-bike-svg{width:100%;height:auto;min-height:230px}
+.interactive-bike-svg{display:block;width:100%;height:auto;min-height:230px}
 .bike-wheel-outer{fill:none;stroke:#a9bdcb;stroke-width:9}
 .bike-wheel-inner{fill:none;stroke:#718da2;stroke-width:2}
 .bike-hub{fill:#b5cbd9}
@@ -62,6 +66,12 @@
 .bike-detail-line{fill:none;stroke:#a9bdcb;stroke-width:6;stroke-linecap:round}
 .bike-crank-ring{fill:none;stroke:#a9bdcb;stroke-width:6}
 .bike-chain-line,.bike-derailleur-line{fill:none;stroke:#91a9bd;stroke-width:3}
+.bike-suspension-line,.bike-rack-line,.bike-bmx-bar,.bike-track-chain{fill:none;stroke:#e0b45a;stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.bike-pannier{fill:#245b70;stroke:#45d4e3;stroke-width:3}
+.bike-cargo-box{fill:#245b70;stroke:#45d4e3;stroke-width:4;stroke-linejoin:round}
+.bike-electric-battery{fill:#245b70;stroke:#45d4e3;stroke-width:4}
+.bike-electric-motor{fill:#245b70;stroke:#45d4e3;stroke-width:5}
+.bike-electric-detail{fill:none;stroke:#e0b45a;stroke-width:4}
 .bike-component-drawing.is-selected .bike-frame-line,.bike-component-drawing.is-selected .bike-fork-line,.bike-component-drawing.is-selected .bike-stem-line,.bike-component-drawing.is-selected .bike-handlebar-line,.bike-component-drawing.is-selected .bike-seatpost-line,.bike-component-drawing.is-selected .bike-saddle-line,.bike-component-drawing.is-selected .bike-crank-arm,.bike-component-drawing.is-selected .bike-chain-line,.bike-component-drawing.is-selected .bike-derailleur-line,.bike-component-drawing.is-selected .bike-brake-line{stroke:#08c5d8;filter:drop-shadow(0 0 3px rgba(8,185,208,.4))}
 .bike-component-drawing.is-selected .bike-crank-ring,.bike-component-drawing.is-selected .bike-detail-shape,.bike-component-drawing.is-selected .bike-detail-line{stroke:#08c5d8}
 .interactive-bike-svg>g[data-component].is-selected .bike-wheel-outer{stroke:#08c5d8}
@@ -69,7 +79,7 @@
 .bike-part-marker{cursor:pointer;outline:none}
 .bike-marker-circle{fill:#102d47;stroke:#08b9d0;stroke-width:3;transition:.15s}
 .bike-marker-text{fill:#eafaff;font-size:12px;font-weight:900;text-anchor:middle;pointer-events:none}
-.bike-part-marker:hover .bike-marker-circle,.bike-part-marker:focus .bike-marker-circle,.bike-part-marker.active .bike-marker-circle{fill:#08b9d0;stroke:#36d0df;r:16}
+.bike-part-marker:hover .bike-marker-circle,.bike-part-marker:focus .bike-marker-circle,.bike-part-marker.active .bike-marker-circle{fill:#08b9d0;stroke:#36d0df}
 .bike-part-marker:hover .bike-marker-text,.bike-part-marker:focus .bike-marker-text,.bike-part-marker.active .bike-marker-text{fill:#08243b}
 .bike-part-marker.has-part .bike-marker-circle{fill:#08b9d0;stroke:#36d0df}
 .bike-part-marker.has-part .bike-marker-text{fill:#08243b}
@@ -155,21 +165,28 @@
 .builder-budget-message.over-budget{background:rgba(233,161,38,.14);border-color:rgba(233,161,38,.25);color:#ffd27d}
 .builder-save-actions{justify-content:flex-end}
 @media(max-width:950px){
+.builder-wizard{height:calc(100svh - 75px)}
 .bike-type-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .builder-workspace{grid-template-columns:1fr}
 .builder-side-panel{position:static}
 .builder-product-results{grid-template-columns:1fr}
 }
 @media(max-width:650px){
-.builder-screen{padding:15px}
-.builder-progress-step{justify-content:center;padding:8px 3px;font-size:0}
-.builder-progress-step span{font-size:12px}
-.bike-type-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-.builder-details-grid,.builder-live-summary,.builder-review-summary{grid-template-columns:1fr 1fr}
-.builder-component-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+.builder-wizard{height:calc(100svh - 65px);margin-bottom:0}
+.builder-wizard-heading{margin:8px 0}
 .builder-wizard-heading,.builder-section-heading,.builder-step-actions,.builder-heading-actions{align-items:stretch;flex-direction:column}
 .builder-heading-actions{gap:8px}
 .builder-autosave-indicator{white-space:normal}
+.builder-progress{margin:8px 0 10px;gap:4px}
+.builder-progress-step{justify-content:center;padding:8px 3px;font-size:0}
+.builder-progress-step span{font-size:12px}
+.builder-screen{padding:13px}
+.builder-section-heading{margin-bottom:16px}
+.bike-type-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bike-type-card{min-height:112px;padding:10px}
+.bike-type-icon svg{width:75px}
+.builder-details-grid,.builder-live-summary,.builder-review-summary{grid-template-columns:1fr 1fr}
+.builder-component-list{grid-template-columns:repeat(2,minmax(0,1fr))}
 .builder-step-actions>button{width:100%}
 .builder-results-toolbar{align-items:stretch;flex-direction:column}
 .builder-results-toolbar label{align-items:flex-start;flex-direction:column}
@@ -182,7 +199,11 @@
 .review-remove-button{margin-left:auto}
 }
 @media(max-width:420px){
+.builder-wizard{height:calc(100svh - 60px)}
 .builder-details-grid,.builder-live-summary,.builder-review-summary{grid-template-columns:1fr}
 .builder-model-legend{gap:8px}
 .model-selected-part{flex-wrap:wrap}
+.bike-type-card strong{font-size:12px}
 }
+
+.bike-type-icon svg{display:block;width:85px;height:55px;overflow:visible}.bike-type-svg .bike-tire{fill:none;stroke:#172d3d;stroke-width:5}.bike-type-svg .bike-rim{fill:none;stroke:#8ba8b8;stroke-width:1.7}.bike-type-svg .bike-spoke{stroke:#718da2;stroke-width:.9}.bike-type-svg .bike-frame{fill:none;stroke:#26c18a;stroke-width:4.2;stroke-linecap:round;stroke-linejoin:round}.bike-type-svg .bike-metal{fill:none;stroke:#d2e4ed;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.bike-type-svg .bike-seat{fill:#172d3d;stroke:#d2e4ed;stroke-width:1.4}.bike-type-svg .bike-accent{fill:none;stroke:#f0b84e;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}

@@ -52,38 +52,73 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <style>
-.login-screen{min-height:100vh;margin:0;padding:0;background:#071c30}
-.login-main{width:100%;max-width:none;margin:0;padding:0}
-.login-page{width:100%;min-height:100vh;min-height:100svh;margin:0;padding:45px clamp(24px,5vw,90px);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
-.login-layout{width:100%;max-width:1600px;grid-template-columns:minmax(0,1.25fr) minmax(440px,.85fr);gap:clamp(35px,5vw,90px);align-items:center}
-.login-showcase{min-height:760px;padding:clamp(38px,4vw,65px);border-radius:24px;display:flex;flex-direction:column;justify-content:space-between}
-.login-showcase-content h1{font-size:clamp(48px,5vw,76px);line-height:1.05}
-.login-showcase-content p{font-size:17px;line-height:1.8;max-width:540px}
-.login-bike-art{max-width:650px;width:100%;margin:20px auto}
-.login-form-area{width:100%;display:flex;flex-direction:column;align-items:center}
-.login-card{width:100%;max-width:580px;padding:clamp(35px,4vw,60px);border-radius:24px;box-sizing:border-box}
-.login-card-heading h2{font-size:36px}
-.login-card-heading p{font-size:15px}
-.login-input-group{margin-bottom:23px}
-.login-input-wrap{min-height:58px}
-.login-input-wrap input{font-size:15px}
-.login-submit,.login-register-button{min-height:58px;font-size:15px}
-.login-security-note{margin-top:25px}
+html,body.login-screen{height:100%;min-height:0;margin:0;overflow:hidden}
+body.login-screen{background:#071c30}
+.login-main{width:100%;max-width:none;height:100%;min-height:0;margin:0;padding:0;overflow:hidden}
+.login-main>.alert{display:none}
+.login-page{width:100%;height:100vh;height:100svh;min-height:0;margin:0;padding:clamp(12px,2.5vh,28px) clamp(16px,3vw,55px);display:flex;align-items:center;justify-content:center;box-sizing:border-box;overflow:hidden}
+.login-layout{width:100%;height:100%;max-width:1550px;max-height:900px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(340px,.85fr);gap:clamp(20px,3vw,55px);align-items:center;min-height:0}
+.login-showcase{height:100%;min-height:0;padding:clamp(22px,3vh,40px) clamp(25px,3vw,48px);border-radius:22px;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;overflow:hidden}
+.login-showcase-content h1{font-size:clamp(38px,4.2vw,64px);line-height:1.04;margin:12px 0}
+.login-showcase-content p{font-size:clamp(12px,1.1vw,15px);line-height:1.65;max-width:520px}
+.login-bike-art{width:100%;max-width:560px;height:clamp(120px,25vh,240px);margin:5px auto;flex-shrink:1}
+.login-bike-art svg{width:100%;height:100%;display:block}
+.login-showcase-bottom{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:10px}
+.login-form-area{width:100%;max-height:100%;display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden}
+.login-card{width:100%;max-width:480px;max-height:100%;padding:clamp(20px,3vh,36px) clamp(22px,3vw,40px);border-radius:20px;box-sizing:border-box;overflow:hidden}
+.login-card-heading h2{font-size:clamp(25px,2.4vw,32px);margin:8px 0}
+.login-card-heading p{font-size:13px;margin:5px 0 17px}
+.login-card-icon{width:42px;height:42px}
+.login-input-group{margin-bottom:15px}
+.login-input-wrap{min-height:48px}
+.login-input-wrap input{font-size:14px}
+.login-submit,.login-register-button{min-height:48px;font-size:13px}
+.login-security-note{margin-top:16px;font-size:11px}
 .login-copyright{display:none!important}
-.login-main>.alert{max-width:900px;margin:15px auto}
+.login-main>.alert{display:block;position:absolute;z-index:10;top:8px;left:50%;transform:translateX(-50%);width:min(90%,500px);margin:0}
 @media(max-width:900px){
-.login-page{padding:28px 20px}
-.login-layout{grid-template-columns:1fr;max-width:680px;gap:25px}
-.login-showcase{min-height:auto;gap:30px}
-.login-bike-art{max-width:500px}
-.login-form-area{width:100%}
+.login-page{padding:12px}
+.login-layout{display:flex;justify-content:center;align-items:center;max-width:500px}
+.login-showcase{display:none}
+.login-form-area{width:100%;max-width:460px;max-height:100%;overflow:visible}
 .login-card{max-width:100%}
 }
 @media(max-width:520px){
-.login-page{padding:16px 12px}
-.login-showcase,.login-card{padding:25px 20px}
-.login-showcase-content h1{font-size:42px}
-.login-card-heading h2{font-size:29px}
+.login-page{padding:10px}
+.login-layout{max-width:430px}
+.login-card{padding:22px 20px;border-radius:17px}
+.login-card-heading h2{font-size:27px}
+.login-card-heading p{font-size:12px;margin-bottom:14px}
+.login-card-icon{width:38px;height:38px}
+.login-input-group{margin-bottom:13px}
+.login-input-wrap{min-height:46px}
+.login-submit,.login-register-button{min-height:46px}
+.login-security-note{margin-top:13px}
+}
+@media(max-height:650px){
+.login-page{padding-top:7px;padding-bottom:7px}
+.login-showcase{padding-top:15px;padding-bottom:15px}
+.login-showcase-content h1{font-size:clamp(30px,5vh,43px)}
+.login-bike-art{height:clamp(75px,17vh,130px)}
+.login-card{padding-top:15px;padding-bottom:15px}
+.login-card-heading h2{font-size:24px}
+.login-card-heading p{margin-bottom:10px}
+.login-card-icon{width:32px;height:32px}
+.login-input-group{margin-bottom:9px}
+.login-input-wrap{min-height:42px}
+.login-submit,.login-register-button{min-height:42px}
+.login-security-note{margin-top:9px}
+}
+@media(max-width:900px) and (max-height:560px){
+.login-card{padding:12px 20px}
+.login-card-heading h2{font-size:22px;margin:4px 0}
+.login-card-heading p{margin:3px 0 8px}
+.login-card-icon{display:none}
+.login-input-group{margin-bottom:7px}
+.login-input-wrap{min-height:38px}
+.login-submit,.login-register-button{min-height:38px}
+.login-security-note{margin-top:7px}
+.login-card-divider{margin:9px 0}
 }
 </style>
 

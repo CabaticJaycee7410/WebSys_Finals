@@ -48,10 +48,18 @@ $budget = filter_var(isset($input['budget']) ? $input['budget'] : 0, FILTER_VALI
 $parts = isset($input['parts']) ? $input['parts'] : array();
 
 $allowedTypes = array(
-    'Mountain Bike', 'BMX', 'Road Bike', 'Gravel Bike', 'Hybrid Bike', 'Commuter Bike',
-    'City Bike', 'Touring Bike', 'Folding Bike', 'Fat Bike', 'Track / Fixed Gear',
-    'Cyclocross Bike', 'Downhill Bike', 'Enduro Bike', 'Cross-Country Bike',
-    'Electric Bike', 'Cargo Bike', 'Tandem Bike', 'Recumbent Bike', "Kids' Bike", 'Custom Build'
+    'Mountain Bike',
+    'Road Bike',
+    'BMX',
+    'Gravel Bike',
+    'Hybrid Bike',
+    'Touring Bike',
+    'Folding Bike',
+    'Fat Bike',
+    'Track / Fixed Gear',
+    'Electric Bike',
+    'Cargo Bike',
+    'Custom Build'
 );
 
 $components = array(

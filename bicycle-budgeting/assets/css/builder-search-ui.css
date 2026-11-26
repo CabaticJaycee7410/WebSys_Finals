@@ -1,0 +1,36 @@
+
+.builder-search-selected-compact{display:flex;align-items:center;gap:10px;width:max-content;max-width:100%;padding:9px 13px;margin:10px 0 12px;border-radius:9px;background:rgba(21,55,80,.72);border:1px solid rgba(154,194,220,.2)}
+.builder-search-selected-compact span{color:#a9bfd0;font-size:12px}
+.builder-search-selected-compact strong{color:#eaf4fa;font-size:13px}
+.builder-live-search-form{display:flex;flex-direction:column;gap:11px;width:100%;max-width:100%;padding:14px;box-sizing:border-box}
+.builder-search-top-row{display:grid;grid-template-columns:minmax(220px,1fr) minmax(145px,190px) 118px;align-items:end;gap:10px;width:100%}
+.builder-search-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.builder-search-field>label{color:#d8e8f2;font-size:12px;font-weight:700}
+.builder-search-field input,.builder-search-field select{width:100%;height:43px;min-width:0;padding:9px 36px 9px 12px;box-sizing:border-box;border:1px solid rgba(154,194,220,.25);border-radius:8px;background-color:#102d47;color:#f1f8fc;font-size:13px}
+.builder-search-field input::placeholder{color:#91adbf}
+.builder-search-field select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#a9cbd6 50%),linear-gradient(135deg,#a9cbd6 50%,transparent 50%);background-position:calc(100% - 17px) 18px,calc(100% - 12px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer}
+.builder-search-icon-button{display:flex;align-items:center;justify-content:center;gap:8px;height:43px;min-height:43px;padding:0 16px;white-space:nowrap}
+.builder-search-icon-button svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.builder-search-filter-panels{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
+.builder-search-filter-panels #brandFilterPanel,.builder-search-filter-panels #budgetFilterPanel{display:grid;grid-template-columns:135px minmax(0,1fr);align-items:center;gap:8px 12px;margin:0;padding:11px 13px;background:rgba(17,48,72,.72);border:1px solid rgba(154,194,220,.16);border-radius:9px}
+.builder-search-filter-panels #brandFilterPanel[hidden],.builder-search-filter-panels #budgetFilterPanel[hidden]{display:none!important}
+.builder-search-filter-panels label{color:#d8e8f2;font-size:12px;font-weight:700}
+.builder-search-filter-panels input,.builder-search-filter-panels select{width:100%;height:39px;min-width:0;padding:8px 34px 8px 11px;box-sizing:border-box;border:1px solid rgba(154,194,220,.25);border-radius:8px;background-color:#102d47;color:#f1f8fc;font-size:12px}
+.builder-search-filter-panels select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#a9cbd6 50%),linear-gradient(135deg,#a9cbd6 50%,transparent 50%);background-position:calc(100% - 17px) 16px,calc(100% - 12px) 16px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;cursor:pointer}
+.builder-search-filter-panels #brandFilterPanel p{grid-column:2;margin:0;color:#9bb8c8;font-size:10px}
+.builder-search-filter-panels #budgetFilterPanel label[hidden],.builder-search-filter-panels #budgetFilterPanel input[hidden]{display:none!important}
+.builder-search-legacy-controls{display:none!important}
+#builderResultsToolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:13px 0 9px;padding:10px 12px;background:rgba(17,48,72,.58);border:1px solid rgba(154,194,220,.14);border-radius:9px}
+#builderResultsToolbar label{display:flex;align-items:center;gap:10px;color:#d8e8f2;font-size:12px;font-weight:700}
+#productSort{min-width:190px;height:38px;padding:7px 32px 7px 10px;border:1px solid rgba(154,194,220,.25);border-radius:8px;background-color:#102d47;color:#f1f8fc;font-size:12px;cursor:pointer}
+@media(max-width:650px){
+.builder-search-top-row{grid-template-columns:minmax(0,1fr) minmax(115px,.65fr);gap:9px}
+.builder-search-keyword{grid-column:1/-1}
+.builder-search-icon-button{width:100%}
+.builder-search-filter-panels #brandFilterPanel,.builder-search-filter-panels #budgetFilterPanel{grid-template-columns:1fr;gap:7px}
+.builder-search-filter-panels #brandFilterPanel p{grid-column:1}
+#builderResultsToolbar{align-items:stretch;flex-direction:column}
+#builderResultsToolbar label{align-items:stretch;flex-direction:column}
+#productSort{width:100%}
+}
+@media(max-width:390px){.builder-search-top-row{grid-template-columns:1fr}.builder-search-keyword{grid-column:auto}}

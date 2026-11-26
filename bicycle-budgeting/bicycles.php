@@ -1,6 +1,7 @@
 
 <?php
 require_once __DIR__ . '/includes/functions.php';
+require_once __DIR__ . '/includes/bicycle_visuals.php';
 require_login();
 
 $pageTitle = 'My Garage';
@@ -134,187 +135,249 @@ require __DIR__ . '/includes/header.php';
 ?>
 
 <style>
-.garage-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:22px 0}
-.garage-stat{background:rgba(22,68,93,.67);border:1px solid rgba(120,205,220,.24);border-top:3px solid #08b9d0;border-radius:13px;padding:18px;box-shadow:0 8px 25px rgba(0,15,30,.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-.garage-stat span{display:block;font-size:12px;color:#a9cbd6}
-.garage-stat strong{display:block;font-size:24px;color:#53d9e8;margin-top:9px}
-.garage-stat small{display:block;margin-top:5px;color:#91b8c5;font-size:11px}
-.garage-bike-card{background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);border-radius:14px;padding:20px;margin-bottom:17px;box-shadow:0 9px 28px rgba(0,15,30,.22);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);transition:background .2s,border-color .2s,transform .2s}
-.garage-bike-card:hover{background:rgba(29,83,106,.76);border-color:rgba(8,197,216,.4);transform:translateY(-2px)}
-.garage-bike-top{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,.7fr);align-items:center;gap:18px}
-.garage-bike-info{display:flex;align-items:center;gap:14px;min-width:0}
-.garage-bike-icon{width:54px;height:54px;display:grid;place-items:center;background:rgba(8,185,208,.17);border:1px solid rgba(8,197,216,.3);border-radius:13px;font-size:25px;flex-shrink:0}
-.garage-bike-info h3{margin:0 0 5px;font-size:17px;color:#e0f5f8}
-.garage-bike-info p,.garage-bike-info small{margin:3px 0;color:#a9cbd6;font-size:12px}
-.garage-bike-type span{display:block;font-size:11px;color:#91b8c5;margin-bottom:5px}
-.garage-bike-type strong{color:#53d9e8}
-.garage-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(120,205,220,.27);border-radius:8px;padding:9px 13px;background:rgba(35,101,122,.4);color:#c8edf1;text-decoration:none;font-size:12px;font-weight:700;cursor:pointer;transition:.2s}
+.site-footer{display:none!important}
+.garage-page{width:100%;height:calc(100vh - 75px);height:calc(100svh - 75px);min-height:0;margin:0;padding:8px clamp(14px,2.5vw,34px) 12px;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.garage-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-shrink:0}
+.garage-header h1{font-size:clamp(22px,2.2vw,29px);margin:0 0 4px}
+.garage-header>div>p:last-child{font-size:12px;margin:0;color:#a9cbd6}
+.garage-header .eyebrow{font-size:10px;letter-spacing:1.3px;margin:0 0 4px;color:#53d9e8}
+.garage-header .dashboard-guide-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.garage-header .dashboard-guide-actions a,.garage-header .dashboard-guide-actions button{white-space:nowrap}
+.garage-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 12px;flex-shrink:0}
+.garage-stat{min-width:0;background:rgba(22,68,93,.67);border:1px solid rgba(120,205,220,.24);border-top:3px solid #08b9d0;border-radius:11px;padding:13px;box-shadow:0 8px 20px rgba(0,15,30,.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.garage-stat span{display:block;font-size:11px;color:#a9cbd6}
+.garage-stat strong{display:block;font-size:clamp(17px,1.8vw,23px);color:#53d9e8;margin-top:6px;overflow-wrap:anywhere}
+.garage-stat small{display:block;margin-top:4px;color:#91b8c5;font-size:10px}
+.garage-content-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 8px 12px 0;scrollbar-width:thin;scrollbar-color:rgba(83,217,232,.55) rgba(10,43,64,.35)}
+.garage-content-scroll::-webkit-scrollbar{width:7px}
+.garage-content-scroll::-webkit-scrollbar-track{background:rgba(10,43,64,.35);border-radius:10px}
+.garage-content-scroll::-webkit-scrollbar-thumb{background:rgba(83,217,232,.55);border-radius:10px}
+.garage-content-scroll .section-heading{margin-bottom:10px}
+.garage-content-scroll .section-heading h2{font-size:18px;margin:0;color:#d9f2f5}
+.garage-content-scroll .section-heading p{font-size:11px;margin:3px 0;color:#a9cbd6}
+.garage-bike-card{background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);border-radius:13px;padding:15px;margin-bottom:11px;box-shadow:0 8px 22px rgba(0,15,30,.2);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);transition:background .2s,border-color .2s}
+.garage-bike-card:hover{background:rgba(29,83,106,.76);border-color:rgba(8,197,216,.4)}
+.garage-bike-top{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,.7fr);align-items:center;gap:15px}
+.garage-bike-info{display:flex;align-items:center;gap:15px;min-width:0}
+.garage-bike-icon{width:66px;height:66px;min-width:66px;display:flex;align-items:center;justify-content:center;background:rgba(8,185,208,.17);border:1px solid rgba(8,197,216,.3);border-radius:15px;flex-shrink:0}
+.garage-bike-icon svg{display:block;width:62px;height:42px;max-width:100%;overflow:visible}
+.garage-bike-info h3{margin:0 0 5px;font-size:16px;color:#e0f5f8}
+.garage-bike-info p,.garage-bike-info small{margin:3px 0;color:#a9cbd6;font-size:11px}
+.garage-bike-type span{display:block;font-size:10px;color:#91b8c5;margin-bottom:5px}
+.garage-bike-type strong{color:#53d9e8;font-size:13px}
+.garage-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(120,205,220,.27);border-radius:8px;padding:9px 13px;background:rgba(35,101,122,.4);color:#c8edf1;text-decoration:none;font-size:11px;font-weight:700;cursor:pointer;transition:.2s}
 .garage-button:hover{background:rgba(8,185,208,.25);border-color:#08b9d0;color:#e9fbfd}
 .garage-button.danger{color:#ffb9c1;border-color:rgba(220,83,100,.35);background:rgba(220,53,69,.15)}
 .garage-button.danger:hover{background:rgba(185,54,74,.7);color:#ffe9ec}
-.garage-plans{border-top:1px solid rgba(120,205,220,.2);margin-top:19px;padding-top:17px}
-.garage-plans h4{font-size:13px;margin:0 0 12px;color:#8cecf3}
-.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:10px;margin-top:9px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-.garage-plan h5{font-size:13px;margin:0 0 6px;color:#e0f5f8}
-.garage-plan p{font-size:11px;color:#a9cbd6;margin:4px 0}
+.garage-plans{border-top:1px solid rgba(120,205,220,.2);margin-top:13px;padding-top:12px}
+.garage-plans h4{font-size:12px;margin:0 0 9px;color:#8cecf3}
+.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:9px;margin-top:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.garage-plan h5{font-size:12px;margin:0 0 5px;color:#e0f5f8}
+.garage-plan p{font-size:10px;color:#a9cbd6;margin:3px 0}
 .garage-plan-actions{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
 .garage-plan-actions form{margin:0}
-.garage-empty{padding:20px;text-align:center;color:#a9cbd6;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:10px;font-size:12px}
-.garage-unassigned{margin-top:25px}
-.dashboard-guide-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.garage-bike-card .garage-plans,.garage-bike-card .garage-plan,.garage-bike-card .garage-empty{color:#d4edf1}
-.garage-bike-card .garage-plan strong,.garage-bike-card .garage-plan h5{color:#e0f5f8}
-.garage-bike-card .garage-plan p{color:#a9cbd6}
-@media(max-width:800px){.garage-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.garage-bike-top{grid-template-columns:1fr}.garage-plan{align-items:flex-start;flex-direction:column}}
-@media(max-width:480px){.garage-stats{grid-template-columns:1fr}.dashboard-guide-actions{width:100%}.dashboard-guide-actions a,.dashboard-guide-actions button{width:100%}}
+.garage-empty{padding:16px;text-align:center;color:#a9cbd6;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:9px;font-size:11px}
+.garage-unassigned{margin-top:18px}
+.garage-unassigned .section-heading h2{font-size:16px}
+.garage-unassigned .garage-plan{margin-bottom:9px}
+.garage-unassigned .garage-plan-actions{align-self:center}
+.garage-page .empty-state{padding:22px 16px}
+.garage-page .empty-state h3{font-size:16px}
+.garage-page .empty-state p{font-size:11px}
+.garage-page>.alert{flex-shrink:0;margin:0 0 10px}
+@media(max-width:1000px){
+.garage-page{height:calc(100vh - 70px);height:calc(100svh - 70px)}
+.garage-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:800px){
+.garage-bike-top{grid-template-columns:1fr}
+.garage-bike-type{padding-left:81px}
+.garage-plan{align-items:flex-start;flex-direction:column}
+.garage-plan-actions{width:100%}
+}
+@media(max-width:700px){
+.garage-page{height:calc(100vh - 65px);height:calc(100svh - 65px);padding:10px 12px 12px}
+.garage-header{align-items:flex-start}
+.garage-header h1{font-size:23px}
+.garage-header>div>p:last-child{font-size:11px}
+.garage-header .dashboard-guide-actions{gap:7px}
+.garage-stats{gap:8px}
+.garage-stat{padding:10px}
+.garage-stat strong{font-size:18px}
+.garage-stat small{font-size:9px}
+.garage-content-scroll .section-heading h2{font-size:16px}
+.garage-bike-card{padding:11px}
+.garage-bike-info{gap:12px}
+.garage-bike-icon{width:55px;height:55px;min-width:55px}
+.garage-bike-icon svg{width:52px;height:36px}
+.garage-bike-type{padding-left:67px}
+.garage-plan{padding:10px}
+.garage-plan-actions{flex-wrap:wrap}
+}
+@media(max-width:480px){
+.garage-header{flex-direction:column}
+.garage-header .dashboard-guide-actions{width:100%}
+.garage-header .dashboard-guide-actions a,.garage-header .dashboard-guide-actions button{flex:1;text-align:center;justify-content:center}
+.garage-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.garage-stat strong{font-size:16px}
+.garage-bike-info h3{font-size:14px}
+.garage-bike-type{padding-left:67px}
+.garage-plan-actions .garage-button{flex:1}
+}
 </style>
 
-<div class="dashboard-header">
-    <div>
-        <p class="eyebrow">YOUR CYCLING WORKSPACE</p>
-        <h1>My Garage</h1>
-        <p>View your bicycles and manage their saved build plans in one place.</p>
-    </div>
-    <div class="dashboard-guide-actions">
-        <button type="button" class="user-guide-trigger" id="startUserGuide">How to Use</button>
-        <a class="dashboard-new-build" data-guide="build-bike" href="<?= h(url('builder/index.php')) ?>">＋ Build New Bike</a>
-    </div>
-</div>
-
-<?php foreach ($errors as $error): ?>
-    <div class="alert error"><?= h($error) ?></div>
-<?php endforeach; ?>
-
-<div class="garage-stats" data-guide="garage-overview">
-    <div class="garage-stat">
-        <span>Total Bicycles</span>
-        <strong><?= count($bicycles) ?></strong>
-        <small>Registered bicycles</small>
-    </div>
-    <div class="garage-stat">
-        <span>Saved Build Plans</span>
-        <strong><?= count($plans) ?></strong>
-        <small>Plans created in Bicycle Builder</small>
-    </div>
-    <div class="garage-stat">
-        <span>Total Build Budget</span>
-        <strong>₱<?= number_format($totalBudget, 2) ?></strong>
-        <small>Combined target budgets</small>
-    </div>
-    <div class="garage-stat">
-        <span>Planned Parts Cost</span>
-        <strong>₱<?= number_format($totalPartsCost, 2) ?></strong>
-        <small><?= $totalSelectedParts ?> selected parts</small>
-    </div>
-</div>
-
-<section class="dashboard-projects">
-    <div class="section-heading">
+<div class="garage-page">
+    <div class="garage-header">
         <div>
-            <h2>My Bicycles</h2>
-            <p>Your registered bicycles and their associated build plans.</p>
+            <p class="eyebrow">YOUR CYCLING WORKSPACE</p>
+            <h1>My Garage</h1>
+            <p>View your bicycles and manage their saved build plans in one place.</p>
+        </div>
+        <div class="dashboard-guide-actions">
+            <button type="button" class="user-guide-trigger" id="startUserGuide">How to Use</button>
+            <a class="dashboard-new-build" data-guide="build-bike" href="<?= h(url('builder/index.php')) ?>">＋ Build New Bike</a>
         </div>
     </div>
 
-    <?php if (!$bicycles): ?>
-        <div class="empty-state">
-            <h3>No bicycles registered yet</h3>
-            <p>Start in the Bicycle Builder to create your first bicycle profile.</p>
-            <a class="btn" href="<?= h(url('builder/index.php')) ?>">Build New Bike</a>
-        </div>
-    <?php else: ?>
-        <?php foreach ($bicycles as $bike): ?>
-            <?php
-            $bikeId = (int)$bike['bicycle_id'];
-            $bikePlans = isset($plansByBicycle[$bikeId]) ? $plansByBicycle[$bikeId] : array();
-            ?>
-            <article class="garage-bike-card" data-guide="bicycle-profiles">
-                <div class="garage-bike-top">
-                    <div class="garage-bike-info">
-                        <div class="garage-bike-icon">🚲</div>
-                        <div>
-                            <h3><?= h($bike['bicycle_name']) ?></h3>
-                            <p>
-                                <?= h($bike['bicycle_type']) ?>
-                                <?= !empty($bike['brand']) ? ' · ' . h($bike['brand']) : '' ?>
-                                <?= !empty($bike['model']) ? ' · ' . h($bike['model']) : '' ?>
-                            </p>
-                            <small><?= count($bikePlans) ?> saved build plan(s)</small>
-                        </div>
-                    </div>
-                    <div class="garage-bike-type">
-                        <span>Bicycle Profile</span>
-                        <strong><?= h($bike['bicycle_type']) ?></strong>
-                    </div>
-                </div>
+    <?php foreach ($errors as $error): ?>
+        <div class="alert error"><?= h($error) ?></div>
+    <?php endforeach; ?>
 
-                <div class="garage-plans">
-                    <h4>Saved Build Plans</h4>
-                    <?php if (!$bikePlans): ?>
-                        <div class="garage-empty">No saved build plans are associated with this bicycle yet.</div>
-                    <?php else: ?>
-                        <?php foreach ($bikePlans as $plan): ?>
-                            <div class="garage-plan">
-                                <div>
-                                    <h5><?= h($plan['build_name']) ?></h5>
-                                    <p>
-                                        <?= h($plan['bicycle_type'] ? $plan['bicycle_type'] : $bike['bicycle_type']) ?>
-                                        <?= !empty($plan['bicycle_brand']) ? ' · ' . h($plan['bicycle_brand']) : '' ?>
-                                        <?= !empty($plan['bicycle_model']) ? ' · ' . h($plan['bicycle_model']) : '' ?>
-                                    </p>
-                                    <p>
-                                        <?= (int)$plan['selected_parts'] ?> selected part(s)
-                                        · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?>
-                                        · Budget: ₱<?= number_format((float)$plan['budget_amount'], 2) ?>
-                                    </p>
-                                    <p>Status: <?= h($plan['status']) ?></p>
+    <div class="garage-stats" data-guide="garage-overview">
+        <div class="garage-stat">
+            <span>Total Bicycles</span>
+            <strong><?= count($bicycles) ?></strong>
+            <small>Registered bicycles</small>
+        </div>
+        <div class="garage-stat">
+            <span>Saved Build Plans</span>
+            <strong><?= count($plans) ?></strong>
+            <small>Plans created in Bicycle Builder</small>
+        </div>
+        <div class="garage-stat">
+            <span>Total Build Budget</span>
+            <strong>₱<?= number_format($totalBudget, 2) ?></strong>
+            <small>Combined target budgets</small>
+        </div>
+        <div class="garage-stat">
+            <span>Planned Parts Cost</span>
+            <strong>₱<?= number_format($totalPartsCost, 2) ?></strong>
+            <small><?= $totalSelectedParts ?> selected parts</small>
+        </div>
+    </div>
+
+    <div class="garage-content-scroll">
+        <section class="dashboard-projects">
+            <div class="section-heading">
+                <div>
+                    <h2>My Bicycles</h2>
+                    <p>Your registered bicycles and their associated build plans.</p>
+                </div>
+            </div>
+
+            <?php if (!$bicycles): ?>
+                <div class="empty-state">
+                    <h3>No bicycles registered yet</h3>
+                    <p>Start in the Bicycle Builder to create your first bicycle profile.</p>
+                    <a class="btn" href="<?= h(url('builder/index.php')) ?>">Build New Bike</a>
+                </div>
+            <?php else: ?>
+                <?php foreach ($bicycles as $bike): ?>
+                    <?php
+                    $bikeId = (int)$bike['bicycle_id'];
+                    $bikePlans = isset($plansByBicycle[$bikeId]) ? $plansByBicycle[$bikeId] : array();
+                    ?>
+                    <article class="garage-bike-card" data-guide="bicycle-profiles">
+                        <div class="garage-bike-top">
+                            <div class="garage-bike-info">
+                                <div class="garage-bike-icon">
+                                    <?= bicycle_type_icon_svg($bike['bicycle_type'], 'garage') ?>
                                 </div>
-                                <div class="garage-plan-actions">
-                                    <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Plan</a>
-                                    <form method="post" class="delete-plan-form">
-                                        <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
-                                        <input type="hidden" name="action" value="delete_plan">
-                                        <input type="hidden" name="project_id" value="<?= (int)$plan['project_id'] ?>">
-                                        <button type="submit" class="garage-button danger" data-guide="delete-plan">Delete Plan</button>
-                                    </form>
+                                <div>
+                                    <h3><?= h($bike['bicycle_name']) ?></h3>
+                                    <p>
+                                        <?= h($bike['bicycle_type']) ?>
+                                        <?= !empty($bike['brand']) ? ' · ' . h($bike['brand']) : '' ?>
+                                        <?= !empty($bike['model']) ? ' · ' . h($bike['model']) : '' ?>
+                                    </p>
+                                    <small><?= count($bikePlans) ?> saved build plan(s)</small>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </article>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</section>
+                            <div class="garage-bike-type">
+                                <span>Bicycle Profile</span>
+                                <strong><?= h($bike['bicycle_type']) ?></strong>
+                            </div>
+                        </div>
 
-<?php if ($unassignedPlans): ?>
-    <section class="garage-unassigned dashboard-projects">
-        <div class="section-heading">
-            <div>
-                <h2>Other Saved Build Plans</h2>
-                <p>Build plans that are not currently linked to a bicycle profile.</p>
-            </div>
-        </div>
-        <?php foreach ($unassignedPlans as $plan): ?>
-            <div class="garage-plan">
-                <div>
-                    <h5><?= h($plan['build_name']) ?></h5>
-                    <p><?= (int)$plan['selected_parts'] ?> selected part(s) · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?></p>
-                    <p>Budget: ₱<?= number_format((float)$plan['budget_amount'], 2) ?> · Status: <?= h($plan['status']) ?></p>
+                        <div class="garage-plans">
+                            <h4>Saved Build Plans</h4>
+                            <?php if (!$bikePlans): ?>
+                                <div class="garage-empty">No saved build plans are associated with this bicycle yet.</div>
+                            <?php else: ?>
+                                <?php foreach ($bikePlans as $plan): ?>
+                                    <div class="garage-plan">
+                                        <div>
+                                            <h5><?= h($plan['build_name']) ?></h5>
+                                            <p>
+                                                <?= h($plan['bicycle_type'] ? $plan['bicycle_type'] : $bike['bicycle_type']) ?>
+                                                <?= !empty($plan['bicycle_brand']) ? ' · ' . h($plan['bicycle_brand']) : '' ?>
+                                                <?= !empty($plan['bicycle_model']) ? ' · ' . h($plan['bicycle_model']) : '' ?>
+                                            </p>
+                                            <p>
+                                                <?= (int)$plan['selected_parts'] ?> selected part(s)
+                                                · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?>
+                                                · Budget: ₱<?= number_format((float)$plan['budget_amount'], 2) ?>
+                                            </p>
+                                            <p>Status: <?= h($plan['status']) ?></p>
+                                        </div>
+                                        <div class="garage-plan-actions">
+                                            <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Plan</a>
+                                            <form method="post" class="delete-plan-form">
+                                                <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+                                                <input type="hidden" name="action" value="delete_plan">
+                                                <input type="hidden" name="project_id" value="<?= (int)$plan['project_id'] ?>">
+                                                <button type="submit" class="garage-button danger" data-guide="delete-plan">Delete Plan</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+
+        <?php if ($unassignedPlans): ?>
+            <section class="garage-unassigned dashboard-projects">
+                <div class="section-heading">
+                    <div>
+                        <h2>Other Saved Build Plans</h2>
+                        <p>Build plans that are not currently linked to a bicycle profile.</p>
+                    </div>
                 </div>
-                <div class="garage-plan-actions">
-                    <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Plan</a>
-                    <form method="post" class="delete-plan-form">
-                        <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
-                        <input type="hidden" name="action" value="delete_plan">
-                        <input type="hidden" name="project_id" value="<?= (int)$plan['project_id'] ?>">
-                        <button type="submit" class="garage-button danger" data-guide="delete-plan">Delete Plan</button>
-                    </form>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </section>
-<?php endif; ?>
+                <?php foreach ($unassignedPlans as $plan): ?>
+                    <div class="garage-plan">
+                        <div>
+                            <h5><?= h($plan['build_name']) ?></h5>
+                            <p><?= (int)$plan['selected_parts'] ?> selected part(s) · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?></p>
+                            <p>Budget: ₱<?= number_format((float)$plan['budget_amount'], 2) ?> · Status: <?= h($plan['status']) ?></p>
+                        </div>
+                        <div class="garage-plan-actions">
+                            <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Plan</a>
+                            <form method="post" class="delete-plan-form">
+                                <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+                                <input type="hidden" name="action" value="delete_plan">
+                                <input type="hidden" name="project_id" value="<?= (int)$plan['project_id'] ?>">
+                                <button type="submit" class="garage-button danger" data-guide="delete-plan">Delete Plan</button>
+                            </form>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </section>
+        <?php endif; ?>
+    </div>
+</div>
 
 <div class="user-guide-backdrop" id="userGuideBackdrop" hidden></div>
 <div class="user-guide-panel" id="userGuidePanel" role="dialog" aria-modal="true" aria-labelledby="userGuideTitle" aria-describedby="userGuideText" hidden>
