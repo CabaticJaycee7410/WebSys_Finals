@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -66,7 +65,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <button type="button" class="user-guide-trigger" id="startUserGuide">ⓘ How to Use</button>
 </div>
-<section class="dashboard-stats" data-guide="savings-overview">
+<section class="dashboard-stats savings-stats" data-guide="savings-overview">
     <article class="stat-card">
         <span>Total Savings</span>
         <h2><?= money($totalSavings) ?></h2>
@@ -83,7 +82,7 @@ require __DIR__ . '/includes/header.php';
         <p>Combined budget less recorded savings</p>
     </article>
 </section>
-<section class="content-card">
+<section class="content-card savings-form-card">
     <h2>Add Savings</h2>
     <?php foreach ($errors as $error): ?>
         <div class="alert error"><?= h($error) ?></div>
@@ -91,7 +90,7 @@ require __DIR__ . '/includes/header.php';
     <?php if (!$projects): ?>
         <p>Create a bicycle build plan before recording savings for it.</p>
     <?php else: ?>
-        <form method="post" class="form-grid">
+        <form method="post" class="form-grid savings-form">
             <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
             <div class="form-group" data-guide="savings-project">
                 <label>Bicycle Build</label>
@@ -114,11 +113,11 @@ require __DIR__ . '/includes/header.php';
                 <label>Notes (Optional)</label>
                 <input name="notes" maxlength="255" placeholder="Example: Weekly savings">
             </div>
-            <button class="btn" type="submit" data-guide="savings-save">Record Savings</button>
+            <button class="btn savings-submit" type="submit" data-guide="savings-save">Record Savings</button>
         </form>
     <?php endif; ?>
 </section>
-<section class="dashboard-projects" data-guide="savings-history">
+<section class="dashboard-projects savings-history" data-guide="savings-history">
     <div class="section-heading">
         <div>
             <h2>Savings History</h2>

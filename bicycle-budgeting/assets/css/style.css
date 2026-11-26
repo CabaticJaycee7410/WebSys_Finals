@@ -339,3 +339,100 @@ body.logout-screen .logout-main{width:100%;max-width:none;min-height:100vh;margi
 body.logout-screen .logout-page{width:100%;min-height:100vh;margin:0;padding:30px;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
 body.logout-screen .logout-card{width:100%;max-width:680px;padding:65px 55px}
 @media(max-width:600px){body.logout-screen .logout-page{padding:18px}body.logout-screen .logout-card{padding:40px 22px}}
+/* RESPONSIVE PAGE LAYOUT */
+.app-main .container{width:100%;max-width:none;min-height:calc(100vh - 70px);padding:38px clamp(20px,3.5vw,58px);margin:0 auto}
+.app-main .page-header{align-items:center;margin-bottom:30px}
+.app-main .content-card{width:100%;padding:clamp(22px,2.5vw,34px);margin-bottom:28px}
+.app-main .dashboard-projects{margin-top:34px}
+.app-main .dashboard-stats{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px}
+.app-main .stat-card{min-width:0;padding:27px}
+.app-main .stat-card h2{font-size:clamp(25px,2.2vw,34px)}
+.app-main .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.app-main .form-group{min-width:0}
+.app-main input,.app-main select,.app-main textarea{min-height:49px;font-size:15px}
+.app-main .btn,.app-main .secondary-button{min-height:48px}
+.app-main .project-list{gap:14px}
+.app-main .expense-item,.app-main .savings-item{min-height:95px;padding:22px 25px}
+.app-main .expense-item>div,.app-main .savings-item>div{min-width:0}
+.app-main .expense-item p,.app-main .savings-item p{overflow-wrap:anywhere}
+.app-main .expense-item>strong,.app-main .savings-item>strong{flex-shrink:0;font-size:19px}
+.marketplace-page-card{min-height:400px}
+.marketplace-search-form{width:100%;max-width:100%}
+.marketplace-search-form .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.marketplace-search-form>button{min-width:210px}
+.marketplace-results{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:22px}
+.marketplace-product-card{min-width:0;align-items:flex-start}
+.marketplace-product-card>div{min-width:0;flex:1}
+.marketplace-product-card h3,.marketplace-product-card p{overflow-wrap:anywhere}
+.expenses-form-card,.savings-form-card{width:100%}
+.expenses-form,.savings-form{align-items:end}
+.expenses-submit,.savings-submit{width:100%;align-self:end}
+.expenses-history,.savings-history{width:100%}
+.expenses-history .section-heading,.savings-history .section-heading{margin-bottom:18px}
+.expenses-history .project-list,.savings-history .project-list{width:100%}
+.account-page-header{margin-bottom:28px}
+.account-layout-wide{width:100%;max-width:none;grid-template-columns:minmax(210px,280px) minmax(0,1fr);align-items:start;gap:24px;margin:0 0 35px}
+.account-section-nav{display:grid;gap:9px;padding:18px;border:1px solid rgba(120,205,220,.23);border-radius:14px;background:rgba(22,68,93,.68);box-shadow:var(--shadow);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.account-section-nav a{display:flex;align-items:center;min-height:49px;padding:12px 15px;border:1px solid transparent;border-radius:9px;color:#c5e5eb;font-size:14px;font-weight:750;text-decoration:none;transition:background .2s,border-color .2s}
+.account-section-nav a:hover{border-color:rgba(8,185,208,.3);background:rgba(8,185,208,.13);color:#e9fbfd}
+.account-section-nav a.active{border-color:rgba(8,197,216,.4);background:linear-gradient(100deg,#087f9c,#08a9bd);color:#e9fbfd}
+.account-form-card-wide{width:100%;min-width:0;min-height:390px;padding:clamp(25px,3vw,40px)!important}
+.account-form-card-wide>form{width:100%;max-width:850px}
+.account-form-card-wide .form-group{margin-bottom:22px}
+.account-form-card-wide .form-group input{min-height:52px}
+.account-profile-preview{margin:28px 0}
+.account-profile-preview img,.account-profile-placeholder{width:165px;height:165px}
+.account-profile-placeholder{font-size:58px}
+.account-form-card-wide .account-form-actions{margin-top:28px}
+.account-errors p:last-child{margin-bottom:0}
+.app-main .site-footer{display:none!important}
+@media(max-width:1050px){
+    .app-main .container{padding:30px 25px}
+    .marketplace-results{grid-template-columns:1fr}
+    .account-layout-wide{grid-template-columns:220px minmax(0,1fr)}
+}
+@media(max-width:850px){
+    .app-main .container{padding:27px 22px}
+    .account-layout-wide{grid-template-columns:1fr}
+    .account-section-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .account-section-nav a{justify-content:center;padding:12px 9px;text-align:center;font-size:12px}
+}
+@media(max-width:650px){
+    .app-main .container{width:100%;min-height:60vh;padding:23px 16px}
+    .app-main .page-header{align-items:flex-start;gap:14px;margin-bottom:22px}
+    .app-main .page-header>div{min-width:0;flex:1}
+    .app-main .page-header h1{font-size:27px}
+    .app-main .page-header>button,.app-main .page-header>a{flex-shrink:0}
+    .app-main .content-card{padding:21px 17px;margin-bottom:22px}
+    .app-main .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .app-main .stat-card{padding:18px 15px}
+    .app-main .stat-card span{font-size:12px}
+    .app-main .stat-card h2{font-size:23px}
+    .app-main .stat-card p{font-size:11px}
+    .app-main .form-grid,.marketplace-search-form .form-grid{grid-template-columns:1fr;gap:13px}
+    .app-main .form-group{margin-bottom:7px}
+    .marketplace-search-form>button{width:100%}
+    .marketplace-results{grid-template-columns:1fr}
+    .marketplace-product-card{flex-direction:row;gap:13px;padding:14px}
+    .marketplace-product-card img{width:105px;height:105px;flex-shrink:0}
+    .app-main .expense-item,.app-main .savings-item{align-items:flex-start;flex-direction:row;gap:12px;padding:17px}
+    .app-main .expense-item>strong,.app-main .savings-item>strong{font-size:16px;text-align:right}
+    .account-layout-wide{gap:15px}
+    .account-section-nav{grid-template-columns:1fr;gap:7px;padding:12px}
+    .account-section-nav a{justify-content:flex-start;min-height:45px;padding:10px 13px;font-size:13px}
+    .account-form-card-wide{padding:23px 18px!important}
+    .account-form-card-wide .account-form-actions{flex-direction:column}
+    .account-form-card-wide .account-form-actions .btn,.account-form-card-wide .account-form-actions .secondary-button{width:100%}
+    .account-profile-preview img,.account-profile-placeholder{width:145px;height:145px}
+}
+@media(max-width:420px){
+    .app-main .container{padding:20px 12px}
+    .app-main .page-header h1{font-size:24px}
+    .app-main .dashboard-stats{grid-template-columns:1fr}
+    .app-main .stat-card{padding:19px}
+    .marketplace-product-card{flex-direction:column}
+    .marketplace-product-card img{width:100%;height:165px}
+    .app-main .expense-item,.app-main .savings-item{flex-direction:column}
+    .app-main .expense-item>strong,.app-main .savings-item>strong{text-align:left}
+    .user-guide-panel{right:10px;bottom:10px;width:calc(100% - 20px)}
+}

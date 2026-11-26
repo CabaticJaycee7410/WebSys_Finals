@@ -1,8 +1,6 @@
-
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
-
 $pdo = require __DIR__ . '/config/database.php';
 $userId = current_user_id();
 $errors = array();
@@ -42,15 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($fullName === '' || strlen($fullName) > 150) {
             $errors[] = 'Enter a valid name with a maximum of 150 characters.';
         }
-
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) {
             $errors[] = 'Enter a valid email address with a maximum of 190 characters.';
         }
-
         if (empty($errors)) {
             $check = $pdo->prepare('SELECT user_id FROM users WHERE email = ? AND user_id != ? LIMIT 1');
             $check->execute(array($email, $userId));
-
             if ($check->fetch(PDO::FETCH_ASSOC)) {
                 $errors[] = 'That email address is already being used by another account.';
             } else {
@@ -70,19 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($currentPassword === '' || !password_verify($currentPassword, $user['password_hash'])) {
             $errors[] = 'Your current password is incorrect.';
         }
-
         if (strlen($newPassword) < 8 || !preg_match('/[A-Z]/', $newPassword) || !preg_match('/[a-z]/', $newPassword) || !preg_match('/[0-9]/', $newPassword)) {
             $errors[] = 'Your new password must contain at least 8 characters, including uppercase, lowercase, and a number.';
         }
-
         if ($newPassword !== $confirmPassword) {
             $errors[] = 'The new password confirmation does not match.';
         }
-
         if ($newPassword !== '' && $currentPassword !== '' && $newPassword === $currentPassword) {
             $errors[] = 'Your new password must be different from your current password.';
         }
-
         if (empty($errors)) {
             $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
             $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE user_id = ?');
@@ -94,7 +85,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'upload_picture') {
         if (!isset($_FILES['profile_picture']) || $_FILES['profile_picture']['error'] !== UPLOAD_ERR_OK) {
             $uploadError = isset($_FILES['profile_picture']['error']) ? $_FILES['profile_picture']['error'] : UPLOAD_ERR_NO_FILE;
-
             if ($uploadError === UPLOAD_ERR_NO_FILE) {
                 $errors[] = 'Please select a profile picture.';
             } elseif ($uploadError === UPLOAD_ERR_INI_SIZE || $uploadError === UPLOAD_ERR_FORM_SIZE) {
@@ -104,13 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             $file = $_FILES['profile_picture'];
-
             if ($file['size'] > 2 * 1024 * 1024) {
                 $errors[] = 'The image must not exceed 2 MB.';
             } else {
                 $imageInfo = @getimagesize($file['tmp_name']);
                 $allowedTypes = array(IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png');
-
                 if ($imageInfo === false || !isset($allowedTypes[$imageInfo[2]])) {
                     $errors[] = 'Only valid JPG and PNG images are allowed.';
                 } else {
@@ -118,15 +106,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $finfo = finfo_open(FILEINFO_MIME_TYPE);
                         $mimeType = finfo_file($finfo, $file['tmp_name']);
                         finfo_close($finfo);
-
                         if (($imageInfo[2] === IMAGETYPE_JPEG && $mimeType !== 'image/jpeg') || ($imageInfo[2] === IMAGETYPE_PNG && $mimeType !== 'image/png')) {
                             $errors[] = 'The uploaded image file is invalid.';
                         }
                     }
-
                     if (empty($errors)) {
                         $uploadDirectory = __DIR__ . '/uploads/profile-pictures/';
-
                         if (!is_dir($uploadDirectory) || !is_writable($uploadDirectory)) {
                             $errors[] = 'The profile picture folder is missing or not writable.';
                         } else {
@@ -136,23 +121,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 } elseif (function_exists('openssl_random_pseudo_bytes')) {
                                     $strong = false;
                                     $randomBytes = openssl_random_pseudo_bytes(16, $strong);
-
                                     if ($randomBytes === false || !$strong) {
                                         throw new Exception('Secure random generation failed.');
                                     }
-
                                     $fileName = bin2hex($randomBytes);
                                 } else {
                                     throw new Exception('Secure random generation is unavailable.');
                                 }
-
                                 $newFileName = $fileName . '.' . $allowedTypes[$imageInfo[2]];
                                 $destination = $uploadDirectory . $newFileName;
                                 $relativePath = 'uploads/profile-pictures/' . $newFileName;
-
                                 if (move_uploaded_file($file['tmp_name'], $destination)) {
                                     $update = $pdo->prepare('UPDATE users SET profile_picture = ? WHERE user_id = ?');
-
                                     try {
                                         $update->execute(array($relativePath, $userId));
                                     } catch (Exception $e) {
@@ -161,22 +141,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         }
                                         throw $e;
                                     }
-
                                     $oldPicture = $user['profile_picture'];
                                     $_SESSION['user_profile_picture'] = $relativePath;
-
                                     if (is_string($oldPicture) && strpos($oldPicture, 'uploads/profile-pictures/') === 0) {
                                         $oldFileName = basename($oldPicture);
-
                                         if ($oldFileName !== $newFileName) {
                                             $oldPath = $uploadDirectory . $oldFileName;
-
                                             if (is_file($oldPath)) {
                                                 unlink($oldPath);
                                             }
                                         }
                                     }
-
                                     set_flash('success', 'Your profile picture has been updated.');
                                     redirect('account.php?section=picture');
                                 } else {
@@ -196,11 +171,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pictureUrl = '';
-
 if (!empty($user['profile_picture'])) {
     $pictureName = basename($user['profile_picture']);
     $picturePath = __DIR__ . '/uploads/profile-pictures/' . $pictureName;
-
     if (strpos($user['profile_picture'], 'uploads/profile-pictures/') === 0 && is_file($picturePath)) {
         $pictureUrl = url('uploads/profile-pictures/' . rawurlencode($pictureName));
     }
@@ -209,8 +182,7 @@ if (!empty($user['profile_picture'])) {
 $pageTitle = 'Account Settings';
 require __DIR__ . '/includes/header.php';
 ?>
-
-<section class="page-header">
+<section class="page-header account-page-header">
     <div>
         <p class="eyebrow">PERSONAL SETTINGS</p>
         <h1>Account Settings</h1>
@@ -218,17 +190,20 @@ require __DIR__ . '/includes/header.php';
     </div>
     <a href="<?= h(url('dashboard.php')) ?>" class="secondary-button">← Back to Dashboard</a>
 </section>
-
 <?php if (!empty($errors)): ?>
-    <div class="alert error">
+    <div class="alert error account-errors">
         <?php foreach ($errors as $error): ?>
             <p><?= h($error) ?></p>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
-
-<div class="account-layout">
-    <section class="card account-form-card">
+<div class="account-layout account-layout-wide">
+    <nav class="account-section-nav" aria-label="Account settings sections">
+        <a class="<?= $section === 'picture' ? 'active' : '' ?>" href="<?= h(url('account.php?section=picture')) ?>">Profile Picture</a>
+        <a class="<?= $section === 'personal' ? 'active' : '' ?>" href="<?= h(url('account.php?section=personal')) ?>">Personal Information</a>
+        <a class="<?= $section === 'password' ? 'active' : '' ?>" href="<?= h(url('account.php?section=password')) ?>">Change Password</a>
+    </nav>
+    <section class="card account-form-card account-form-card-wide">
         <?php if ($section === 'picture'): ?>
             <h2>Profile Picture</h2>
             <p class="muted-text">Upload or change the picture displayed on your account.</p>
@@ -298,5 +273,4 @@ require __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </section>
 </div>
-
 <?php require __DIR__ . '/includes/footer.php'; ?>

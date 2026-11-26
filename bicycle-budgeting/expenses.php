@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -72,7 +71,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <button type="button" class="user-guide-trigger" id="startUserGuide">ⓘ How to Use</button>
 </div>
-<section class="dashboard-stats" data-guide="expenses-overview">
+<section class="dashboard-stats expenses-stats" data-guide="expenses-overview">
     <article class="stat-card">
         <span>Total Recorded Expenses</span>
         <h2><?= money($total) ?></h2>
@@ -84,12 +83,12 @@ require __DIR__ . '/includes/header.php';
         <p>Recent records shown below</p>
     </article>
 </section>
-<section class="content-card">
+<section class="content-card expenses-form-card">
     <h2>Record an Expense</h2>
     <?php foreach ($errors as $error): ?>
         <div class="alert error"><?= h($error) ?></div>
     <?php endforeach; ?>
-    <form method="post" class="form-grid">
+    <form method="post" class="form-grid expenses-form">
         <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
         <div class="form-group" data-guide="expenses-category">
             <label>Category</label>
@@ -121,10 +120,10 @@ require __DIR__ . '/includes/header.php';
             <label>Expense Date</label>
             <input name="expense_date" type="date" value="<?= date('Y-m-d') ?>" required>
         </div>
-        <button class="btn" type="submit" data-guide="expenses-save">Save Expense</button>
+        <button class="btn expenses-submit" type="submit" data-guide="expenses-save">Save Expense</button>
     </form>
 </section>
-<section class="dashboard-projects" data-guide="expenses-history">
+<section class="dashboard-projects expenses-history" data-guide="expenses-history">
     <div class="section-heading">
         <div>
             <h2>Expense History</h2>

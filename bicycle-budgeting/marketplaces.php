@@ -1,4 +1,3 @@
-
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -13,7 +12,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <button type="button" class="user-guide-trigger" id="startUserGuide">ⓘ How to Use</button>
 </div>
-<section class="content-card">
+<section class="content-card marketplace-page-card">
     <form id="marketplaceSearchForm" class="marketplace-search-form">
         <div class="form-group" data-guide="marketplace-keyword">
             <label for="marketplaceKeyword">What bicycle part are you looking for?</label>
