@@ -91,8 +91,7 @@ require __DIR__ . '/includes/header.php';
 .dashboard-garage-list::-webkit-scrollbar{width:7px}
 .dashboard-garage-list::-webkit-scrollbar-track{background:rgba(10,43,64,.35);border-radius:10px}
 .dashboard-garage-list::-webkit-scrollbar-thumb{background:rgba(83,217,232,.55);border-radius:10px}
-.dashboard-garage-card{background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 7px 20px rgba(0,15,30,.2);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);transition:background .2s,border-color .2s}
-.dashboard-garage-card:hover{background:rgba(29,83,106,.76);border-color:rgba(8,197,216,.4)}
+.dashboard-garage-card{background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 7px 20px rgba(0,15,30,.2);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
 .dashboard-garage-bike{display:flex;align-items:center;gap:15px}
 .dashboard-garage-bike .project-bike-icon{width:60px;height:60px;min-width:60px;display:flex;align-items:center;justify-content:center;font-size:35px;flex-shrink:0;background:rgba(8,185,208,.17);border:1px solid rgba(8,197,216,.25);border-radius:14px}
 .dashboard-garage-bike h3{margin:0 0 5px;color:#e0f5f8;font-size:15px}
@@ -110,6 +109,7 @@ require __DIR__ . '/includes/header.php';
 .dashboard-garage-empty{margin-top:10px;padding:10px;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:8px;color:#a9cbd6;font-size:11px}
 .dashboard-unassigned{margin-top:15px}
 .dashboard-unassigned .project-card{margin-bottom:9px;padding:13px;background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+.dashboard-unassigned .project-card:hover{background:rgba(22,68,93,.7);border-color:rgba(120,205,220,.25)}
 .dashboard-unassigned .project-card-main{display:flex;align-items:center;gap:15px}
 .dashboard-unassigned .project-bike-icon{width:60px;height:60px;min-width:60px;display:flex;align-items:center;justify-content:center;font-size:32px;border-radius:14px}
 .dashboard-unassigned .project-card-details h3{color:#e0f5f8;font-size:13px}
@@ -125,8 +125,7 @@ require __DIR__ . '/includes/header.php';
 .dashboard-page .empty-state{padding:22px 16px}
 .dashboard-page .empty-state h3{font-size:16px}
 .dashboard-page .empty-state p{font-size:11px}
-.dashboard-garage-plan[data-plan-select],.dashboard-unassigned .project-card[data-plan-select]{cursor:pointer;pointer-events:auto;position:relative;z-index:1;transition:background .2s,border-color .2s}
-.dashboard-garage-plan[data-plan-select]:hover,.dashboard-garage-plan.plan-selected,.dashboard-unassigned .project-card[data-plan-select]:hover,.dashboard-unassigned .project-card.plan-selected{background:rgba(8,105,128,.35);border-color:#53d9e8}
+.dashboard-garage-plan[data-plan-select],.dashboard-unassigned .project-card[data-plan-select]{cursor:pointer;pointer-events:auto;position:relative;z-index:1}
 @media(max-width:1000px){
 .dashboard-page{height:calc(100vh - 70px);height:calc(100svh - 70px)}
 .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -312,99 +311,101 @@ require __DIR__ . '/includes/header.php';
 <script>
 (function(){
     function initDashboardPlans(){
-        var list = document.getElementById('dashboardGarageList');
-        if (!list) return;
+        var list=document.getElementById('dashboardGarageList');
+        if(!list)return;
 
-        var selectedPlan = null;
-        var totalBudget = <?= json_encode($totalBudget) ?>;
-        var totalCost = <?= json_encode($plannedCost) ?>;
-        var totalParts = <?= json_encode((int)$partSummary['parts']) ?>;
+        var selectedPlan=null;
+        var totalBudget=<?= json_encode($totalBudget) ?>;
+        var totalCost=<?= json_encode($plannedCost) ?>;
+        var totalParts=<?= json_encode((int)$partSummary['parts']) ?>;
 
-        var ids = ['dashboardPlanMode','dashboardBudgetLabel','dashboardBudgetValue','dashboardBudgetNote','dashboardCostLabel','dashboardCostValue','dashboardCostNote','dashboardRemainingLabel','dashboardRemainingValue','dashboardRemainingNote','dashboardPartsLabel','dashboardPartsValue','dashboardPartsNote'];
-        var e = {};
-        ids.forEach(function(id){e[id] = document.getElementById(id);});
+        var ids=['dashboardPlanMode','dashboardBudgetLabel','dashboardBudgetValue','dashboardBudgetNote','dashboardCostLabel','dashboardCostValue','dashboardCostNote','dashboardRemainingLabel','dashboardRemainingValue','dashboardRemainingNote','dashboardPartsLabel','dashboardPartsValue','dashboardPartsNote'];
+        var e={};
+        ids.forEach(function(id){e[id]=document.getElementById(id);});
 
         function money(value){
-            return '₱' + Number(value || 0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+            return '₱'+Number(value||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
         }
 
         function reset(){
-            selectedPlan = null;
+            selectedPlan=null;
             list.querySelectorAll('[data-plan-select]').forEach(function(plan){
-                plan.classList.remove('plan-selected');
                 plan.setAttribute('aria-pressed','false');
             });
-            e.dashboardPlanMode.textContent = 'Showing combined totals for all build plans';
-            e.dashboardBudgetLabel.textContent = 'Total Build Budget';
-            e.dashboardBudgetValue.textContent = money(totalBudget);
-            e.dashboardBudgetNote.textContent = 'Combined budgets for your build plans';
-            e.dashboardCostLabel.textContent = 'Planned Parts Cost';
-            e.dashboardCostValue.textContent = money(totalCost);
-            e.dashboardCostNote.textContent = 'Estimated value of selected parts';
-            e.dashboardRemainingLabel.textContent = 'Unallocated Build Budget';
-            e.dashboardRemainingValue.textContent = money(totalBudget-totalCost);
-            e.dashboardRemainingNote.textContent = 'Combined build budget minus planned parts cost.';
-            e.dashboardPartsLabel.textContent = 'Selected Bicycle Parts';
-            e.dashboardPartsValue.textContent = Number(totalParts).toLocaleString('en-PH');
-            e.dashboardPartsNote.textContent = 'Components selected across your saved bicycle plans.';
+
+            e.dashboardPlanMode.textContent='Showing combined totals for all build plans';
+            e.dashboardBudgetLabel.textContent='Total Build Budget';
+            e.dashboardBudgetValue.textContent=money(totalBudget);
+            e.dashboardBudgetNote.textContent='Combined budgets for your build plans';
+            e.dashboardCostLabel.textContent='Planned Parts Cost';
+            e.dashboardCostValue.textContent=money(totalCost);
+            e.dashboardCostNote.textContent='Estimated value of selected parts';
+            e.dashboardRemainingLabel.textContent='Unallocated Build Budget';
+            e.dashboardRemainingValue.textContent=money(totalBudget-totalCost);
+            e.dashboardRemainingNote.textContent='Combined build budget minus planned parts cost.';
+            e.dashboardPartsLabel.textContent='Selected Bicycle Parts';
+            e.dashboardPartsValue.textContent=Number(totalParts).toLocaleString('en-PH');
+            e.dashboardPartsNote.textContent='Components selected across your saved bicycle plans.';
         }
 
         function select(plan){
-            selectedPlan = plan;
+            selectedPlan=plan;
             list.querySelectorAll('[data-plan-select]').forEach(function(item){
-                item.classList.toggle('plan-selected',item === plan);
-                item.setAttribute('aria-pressed',item === plan ? 'true' : 'false');
+                item.setAttribute('aria-pressed',item===plan?'true':'false');
             });
 
-            var name = plan.getAttribute('data-plan-name') || 'Selected Build Plan';
-            var budget = Number(plan.getAttribute('data-plan-budget')) || 0;
-            var cost = Number(plan.getAttribute('data-plan-cost')) || 0;
-            var parts = Number(plan.getAttribute('data-plan-parts')) || 0;
+            var name=plan.getAttribute('data-plan-name')||'Selected Build Plan';
+            var budget=Number(plan.getAttribute('data-plan-budget'))||0;
+            var cost=Number(plan.getAttribute('data-plan-cost'))||0;
+            var parts=Number(plan.getAttribute('data-plan-parts'))||0;
 
-            e.dashboardPlanMode.textContent = 'Showing individual statistics for: ' + name;
-            e.dashboardBudgetLabel.textContent = 'Selected Plan Budget';
-            e.dashboardBudgetValue.textContent = money(budget);
-            e.dashboardBudgetNote.textContent = name;
-            e.dashboardCostLabel.textContent = 'Selected Plan Parts Cost';
-            e.dashboardCostValue.textContent = money(cost);
-            e.dashboardCostNote.textContent = 'Estimated cost of this plan’s selected parts';
-            e.dashboardRemainingLabel.textContent = 'Remaining Plan Budget';
-            e.dashboardRemainingValue.textContent = money(budget-cost);
-            e.dashboardRemainingNote.textContent = 'Selected plan budget minus its planned parts cost.';
-            e.dashboardPartsLabel.textContent = 'Selected Plan Components';
-            e.dashboardPartsValue.textContent = parts.toLocaleString('en-PH');
-            e.dashboardPartsNote.textContent = 'Components selected for this build plan.';
+            e.dashboardPlanMode.textContent='Showing individual statistics for: '+name;
+            e.dashboardBudgetLabel.textContent='Selected Plan Budget';
+            e.dashboardBudgetValue.textContent=money(budget);
+            e.dashboardBudgetNote.textContent=name;
+            e.dashboardCostLabel.textContent='Selected Plan Parts Cost';
+            e.dashboardCostValue.textContent=money(cost);
+            e.dashboardCostNote.textContent='Estimated cost of this plan’s selected parts';
+            e.dashboardRemainingLabel.textContent='Remaining Plan Budget';
+            e.dashboardRemainingValue.textContent=money(budget-cost);
+            e.dashboardRemainingNote.textContent='Selected plan budget minus its planned parts cost.';
+            e.dashboardPartsLabel.textContent='Selected Plan Components';
+            e.dashboardPartsValue.textContent=parts.toLocaleString('en-PH');
+            e.dashboardPartsNote.textContent='Components selected for this build plan.';
         }
 
         function findPlan(target){
-            while(target && target !== list){
-                if(target.hasAttribute && target.hasAttribute('data-plan-select')) return target;
-                target = target.parentNode;
+            while(target&&target!==list){
+                if(target.hasAttribute&&target.hasAttribute('data-plan-select'))return target;
+                target=target.parentNode;
             }
             return null;
         }
 
-        list.addEventListener('click',function(event){
-            var plan = findPlan(event.target);
-            if(!plan) return;
-            if(event.target.closest && event.target.closest('a')) return;
-            if(selectedPlan === plan) reset();
+        function handlePlan(plan){
+            if(!plan)return;
+            if(selectedPlan===plan)reset();
             else select(plan);
+        }
+
+        list.addEventListener('click',function(event){
+            if(event.target.closest&&event.target.closest('a'))return;
+            handlePlan(findPlan(event.target));
         });
 
         list.addEventListener('keydown',function(event){
-            var plan = findPlan(event.target);
-            if(!plan || (event.key !== 'Enter' && event.key !== ' ')) return;
-            if(event.target.closest && event.target.closest('a')) return;
+            if(event.key!=='Enter'&&event.key!==' ')return;
+            if(event.target.closest&&event.target.closest('a'))return;
+            var plan=findPlan(event.target);
+            if(!plan)return;
             event.preventDefault();
-            if(selectedPlan === plan) reset();
-            else select(plan);
+            handlePlan(plan);
         });
 
         reset();
     }
 
-    if(document.readyState === 'loading'){
+    if(document.readyState==='loading'){
         document.addEventListener('DOMContentLoaded',initDashboardPlans);
     }else{
         initDashboardPlans();
