@@ -5,7 +5,12 @@ USE bicycle_budgeting;
 CREATE TABLE IF NOT EXISTS users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     full_name VARCHAR(150) NOT NULL,
+    first_name VARCHAR(75) NULL,
+    last_name VARCHAR(75) NULL,
     email VARCHAR(190) NOT NULL UNIQUE,
+    phone_number VARCHAR(30) NULL,
+    birthday DATE NULL,
+    gender ENUM('Male','Female') NULL,
     password_hash VARCHAR(255) NOT NULL,
     profile_picture VARCHAR(255) NULL DEFAULT NULL,
     role ENUM('admin','user') NOT NULL DEFAULT 'user',
@@ -152,25 +157,67 @@ CREATE TABLE IF NOT EXISTS project_parts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET @column_exists = (
-    SELECT COUNT(*)
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = 'bicycle_budgeting'
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
     AND TABLE_NAME = 'users'
-    AND COLUMN_NAME = 'profile_picture'
+    AND COLUMN_NAME = 'first_name'
 );
-
-SET @sql = IF(
-    @column_exists = 0,
-    'ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) NULL DEFAULT NULL AFTER password_hash',
-    'SELECT "profile_picture column already exists"'
-);
-
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE users ADD COLUMN first_name VARCHAR(75) NULL AFTER full_name', 'SELECT 1');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
-ALTER TABLE users
-ADD COLUMN first_name VARCHAR(75) NULL AFTER full_name,
-ADD COLUMN last_name VARCHAR(75) NULL AFTER first_name,
-ADD COLUMN phone_number VARCHAR(30) NULL AFTER email,
-ADD COLUMN birthday DATE NULL AFTER phone_number,
-ADD COLUMN gender ENUM('Male', 'Female') NULL AFTER birthday;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'last_name'
+);
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE users ADD COLUMN last_name VARCHAR(75) NULL AFTER first_name', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'phone_number'
+);
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE users ADD COLUMN phone_number VARCHAR(30) NULL AFTER email', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'birthday'
+);
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE users ADD COLUMN birthday DATE NULL AFTER phone_number', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'gender'
+);
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE users ADD COLUMN gender ENUM(''Male'',''Female'') NULL AFTER birthday', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @column_exists = (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'profile_picture'
+);
+SET @sql = IF(@column_exists = 0, 'ALTER TABLE users ADD COLUMN profile_picture VARCHAR(255) NULL DEFAULT NULL AFTER password_hash', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
