@@ -61,7 +61,6 @@ if ($profilePicture !== '') {
                 <a class="<?= $isGaragePage ? 'active' : '' ?>" href="<?= h(url('bicycles.php')) ?>"><span class="sidebar-nav-icon">▣</span><span>My Garage</span></a>
                 <a class="<?= $isBuilderPage ? 'active' : '' ?>" href="<?= h(url('builder/index.php')) ?>"><span class="sidebar-nav-icon">⚙</span><span>Bicycle Builder</span></a>
                 <a class="<?= $currentPage === 'marketplaces.php' ? 'active' : '' ?>" href="<?= h(url('marketplaces.php')) ?>"><span class="sidebar-nav-icon">▤</span><span>Marketplace</span></a>
-                <a class="<?= $currentPage === 'expenses.php' ? 'active' : '' ?>" href="<?= h(url('expenses.php')) ?>"><span class="sidebar-nav-icon">₱</span><span>Expenses</span></a>
                 <a class="<?= $currentPage === 'savings.php' ? 'active' : '' ?>" href="<?= h(url('savings.php')) ?>"><span class="sidebar-nav-icon">◷</span><span>Savings</span></a>
             </nav>
             <div class="sidebar-profile">

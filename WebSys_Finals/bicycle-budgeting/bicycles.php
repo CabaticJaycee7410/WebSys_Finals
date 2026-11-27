@@ -23,88 +23,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             try {
                 $pdo->beginTransaction();
-                $stmt = $pdo->prepare('SELECT project_id, bicycle_id FROM projects WHERE project_id = ? AND user_id = ? LIMIT 1');
-                $stmt->execute(array($projectId, $userId));
+                $stmt = $pdo->prepare('SELECT project_id,bicycle_id FROM projects WHERE project_id=? AND user_id=? LIMIT 1');
+                $stmt->execute(array($projectId,$userId));
                 $project = $stmt->fetch();
 
-                if (!$project) {
-                    throw new Exception('Build plan not found.');
-                }
+                if (!$project) throw new Exception('Build plan not found.');
 
                 $bicycleId = (int)$project['bicycle_id'];
-                $stmt = $pdo->prepare('DELETE FROM project_build_parts WHERE project_id = ?');
-                $stmt->execute(array($projectId));
-                $stmt = $pdo->prepare('DELETE FROM builder_plans WHERE project_id = ?');
-                $stmt->execute(array($projectId));
-                $stmt = $pdo->prepare('DELETE FROM projects WHERE project_id = ? AND user_id = ?');
-                $stmt->execute(array($projectId, $userId));
 
-                if ($stmt->rowCount() === 0) {
-                    throw new Exception('Unable to delete the build plan.');
-                }
+                $stmt = $pdo->prepare('DELETE FROM project_build_parts WHERE project_id=?');
+                $stmt->execute(array($projectId));
+
+                $stmt = $pdo->prepare('DELETE FROM builder_plans WHERE project_id=?');
+                $stmt->execute(array($projectId));
+
+                $stmt = $pdo->prepare('DELETE FROM projects WHERE project_id=? AND user_id=?');
+                $stmt->execute(array($projectId,$userId));
+
+                if ($stmt->rowCount() === 0) throw new Exception('Unable to delete the build plan.');
 
                 if ($bicycleId > 0) {
-                    $stmt = $pdo->prepare('SELECT COUNT(*) FROM projects WHERE bicycle_id = ? AND user_id = ?');
-                    $stmt->execute(array($bicycleId, $userId));
+                    $stmt = $pdo->prepare('SELECT COUNT(*) FROM projects WHERE bicycle_id=? AND user_id=?');
+                    $stmt->execute(array($bicycleId,$userId));
 
                     if ((int)$stmt->fetchColumn() === 0) {
-                        $stmt = $pdo->prepare('DELETE FROM bicycles WHERE bicycle_id = ? AND user_id = ?');
-                        $stmt->execute(array($bicycleId, $userId));
+                        $stmt = $pdo->prepare('DELETE FROM bicycles WHERE bicycle_id=? AND user_id=?');
+                        $stmt->execute(array($bicycleId,$userId));
                     }
                 }
 
                 $pdo->commit();
-                set_flash('success', 'Build plan, selected parts, and unused bicycle profile were deleted successfully.');
+                set_flash('success','Build plan, selected parts, and unused bicycle profile were deleted successfully.');
                 redirect('bicycles.php');
             } catch (Exception $e) {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-                $errors[] = 'Unable to delete this build plan. ' . $e->getMessage();
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                $errors[] = 'Unable to delete this build plan. '.$e->getMessage();
             }
         }
     }
 }
 
-$stmt = $pdo->prepare('SELECT * FROM bicycles WHERE user_id = ? ORDER BY created_at DESC');
+$stmt = $pdo->prepare('SELECT * FROM bicycles WHERE user_id=? ORDER BY created_at DESC');
 $stmt->execute(array($userId));
 $bicycles = $stmt->fetchAll();
 
 $stmt = $pdo->prepare(
     'SELECT
-        p.project_id,
-        p.bicycle_id,
-        p.project_name,
-        p.budget_amount,
-        p.status,
-        p.created_at,
-        COALESCE(NULLIF(bp.build_name, \'\'), p.project_name) AS build_name,
-        bp.bicycle_type,
-        bp.bicycle_brand,
-        bp.bicycle_model,
-        COALESCE(parts.selected_parts, 0) AS selected_parts,
-        COALESCE(parts.parts_total, 0) AS parts_total
+        p.project_id,p.bicycle_id,p.project_name,p.budget_amount,p.status,p.created_at,
+        COALESCE(NULLIF(bp.build_name,\'\'),p.project_name) AS build_name,
+        bp.bicycle_type,bp.bicycle_brand,bp.bicycle_model,
+        COALESCE(parts.selected_parts,0) AS selected_parts,
+        COALESCE(parts.parts_total,0) AS parts_total
      FROM projects p
      LEFT JOIN (
-        SELECT
-            project_id,
-            MAX(NULLIF(build_name, \'\')) AS build_name,
-            MAX(bicycle_type) AS bicycle_type,
-            MAX(bicycle_brand) AS bicycle_brand,
-            MAX(bicycle_model) AS bicycle_model
-        FROM builder_plans
-        GROUP BY project_id
-     ) bp ON bp.project_id = p.project_id
+        SELECT project_id,MAX(NULLIF(build_name,\'\')) AS build_name,MAX(bicycle_type) AS bicycle_type,MAX(bicycle_brand) AS bicycle_brand,MAX(bicycle_model) AS bicycle_model
+        FROM builder_plans GROUP BY project_id
+     ) bp ON bp.project_id=p.project_id
      LEFT JOIN (
-        SELECT
-            project_id,
-            COUNT(*) AS selected_parts,
-            COALESCE(SUM(price), 0) AS parts_total
-        FROM project_build_parts
-        GROUP BY project_id
-     ) parts ON parts.project_id = p.project_id
-     WHERE p.user_id = ?
-     ORDER BY p.created_at DESC, p.project_id DESC'
+        SELECT project_id,COUNT(*) AS selected_parts,COALESCE(SUM(price),0) AS parts_total
+        FROM project_build_parts GROUP BY project_id
+     ) parts ON parts.project_id=p.project_id
+     WHERE p.user_id=?
+     ORDER BY p.created_at DESC,p.project_id DESC'
 );
 $stmt->execute(array($userId));
 $plans = $stmt->fetchAll();
@@ -122,9 +102,7 @@ foreach ($plans as $plan) {
 
     if (!empty($plan['bicycle_id'])) {
         $bikeId = (int)$plan['bicycle_id'];
-        if (!isset($plansByBicycle[$bikeId])) {
-            $plansByBicycle[$bikeId] = array();
-        }
+        if (!isset($plansByBicycle[$bikeId])) $plansByBicycle[$bikeId] = array();
         $plansByBicycle[$bikeId][] = $plan;
     } else {
         $unassignedPlans[] = $plan;
@@ -152,6 +130,7 @@ require __DIR__ . '/includes/header.php';
 .garage-stat small{display:block;margin-top:4px;color:#91b8c5;font-size:10px}
 .garage-stat.individual-stat{border-top-color:#45d4a3;background:rgba(20,78,76,.55)}
 .garage-selected-plan{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 13px;margin-bottom:10px;border:1px solid rgba(120,205,220,.2);border-radius:10px;background:rgba(10,43,64,.48);flex-shrink:0}
+.garage-selected-plan[hidden]{display:none!important}
 .garage-selected-plan strong{display:block;color:#e0f5f8;font-size:12px}
 .garage-selected-plan span{display:block;margin-top:3px;color:#91b8c5;font-size:10px}
 .garage-selection-hint{color:#53d9e8!important;font-size:10px!important;text-align:right}
@@ -164,33 +143,28 @@ require __DIR__ . '/includes/header.php';
 .garage-content-scroll .section-heading p{font-size:11px;margin:3px 0;color:#a9cbd6}
 .garage-bike-card{background:rgba(22,68,93,.7);border:1px solid rgba(120,205,220,.25);border-radius:13px;padding:15px;margin-bottom:11px;box-shadow:0 8px 22px rgba(0,15,30,.2);backdrop-filter:blur(17px);-webkit-backdrop-filter:blur(17px);transition:background .2s,border-color .2s}
 .garage-bike-card:hover{background:rgba(29,83,106,.76);border-color:rgba(8,197,216,.4)}
-.garage-bike-top{display:grid;grid-template-columns:minmax(220px,1fr) minmax(150px,.7fr);align-items:center;gap:15px}
 .garage-bike-info{display:flex;align-items:center;gap:15px;min-width:0}
 .garage-bike-icon{width:66px;height:66px;min-width:66px;display:flex;align-items:center;justify-content:center;background:rgba(8,185,208,.17);border:1px solid rgba(8,197,216,.3);border-radius:15px;flex-shrink:0}
 .garage-bike-icon svg{display:block;width:62px;height:42px;max-width:100%;overflow:visible}
 .garage-bike-info h3{margin:0 0 5px;font-size:16px;color:#e0f5f8}
-.garage-bike-info p,.garage-bike-info small{margin:3px 0;color:#a9cbd6;font-size:11px}
-.garage-bike-type span{display:block;font-size:10px;color:#91b8c5;margin-bottom:5px}
-.garage-bike-type strong{color:#53d9e8;font-size:13px}
+.garage-bike-info p{margin:3px 0;color:#a9cbd6;font-size:11px}
 .garage-button{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(120,205,220,.27);border-radius:8px;padding:9px 13px;background:rgba(35,101,122,.4);color:#c8edf1;text-decoration:none;font-size:11px;font-weight:700;cursor:pointer;transition:.2s}
 .garage-button:hover{background:rgba(8,185,208,.25);border-color:#08b9d0;color:#e9fbfd}
 .garage-button.danger{color:#ffb9c1;border-color:rgba(220,83,100,.35);background:rgba(220,53,69,.15)}
 .garage-button.danger:hover{background:rgba(185,54,74,.7);color:#ffe9ec}
-.garage-plans{border-top:1px solid rgba(120,205,220,.2);margin-top:13px;padding-top:12px}
-.garage-plans h4{font-size:12px;margin:0 0 9px;color:#8cecf3}
-.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:9px;margin-top:8px;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;outline:none}
+.garage-plans{margin-top:10px;padding-top:0;border:0}
+.garage-plan{display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:9px 11px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:9px;margin-top:7px;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;outline:none;min-height:45px}
 .garage-plan:hover{background:rgba(18,65,88,.8);border-color:#08b9d0}
 .garage-plan:focus-visible{outline:2px solid #08b9d0;outline-offset:2px}
 .garage-plan.selected{background:rgba(8,185,208,.13);border-color:#08b9d0;box-shadow:0 0 0 1px rgba(8,185,208,.16)}
-.garage-plan h5{font-size:12px;margin:0 0 5px;color:#e0f5f8}
-.garage-plan p{font-size:10px;color:#a9cbd6;margin:3px 0}
-.garage-plan-actions{position:relative;z-index:2;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.garage-plan-actions{position:relative;z-index:2;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex-shrink:0;margin-left:auto}
 .garage-plan-actions form{margin:0}
+.garage-plan-status{color:#a9cbd6;font-size:10px;white-space:nowrap}
 .garage-empty{padding:16px;text-align:center;color:#a9cbd6;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:9px;font-size:11px}
 .garage-unassigned{margin-top:18px}
 .garage-unassigned .section-heading h2{font-size:16px}
-.garage-unassigned .garage-plan{margin-bottom:9px}
-.garage-unassigned .garage-plan-actions{align-self:center}
+.garage-unassigned .garage-plan-info{min-width:0;flex:1}
+.garage-unassigned .garage-plan-info h5{font-size:12px;margin:0;color:#e0f5f8}
 .garage-page .empty-state{padding:22px 16px}
 .garage-page .empty-state h3{font-size:16px}
 .garage-page .empty-state p{font-size:11px}
@@ -198,12 +172,6 @@ require __DIR__ . '/includes/header.php';
 @media(max-width:1000px){
 .garage-page{height:calc(100vh - 70px);height:calc(100svh - 70px)}
 .garage-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(max-width:800px){
-.garage-bike-top{grid-template-columns:1fr}
-.garage-bike-type{padding-left:81px}
-.garage-plan{align-items:flex-start;flex-direction:column}
-.garage-plan-actions{width:100%}
 }
 @media(max-width:700px){
 .garage-page{height:calc(100vh - 65px);height:calc(100svh - 65px);padding:10px 12px 12px}
@@ -222,9 +190,10 @@ require __DIR__ . '/includes/header.php';
 .garage-bike-info{gap:12px}
 .garage-bike-icon{width:55px;height:55px;min-width:55px}
 .garage-bike-icon svg{width:52px;height:36px}
-.garage-bike-type{padding-left:67px}
-.garage-plan{padding:10px}
-.garage-plan-actions{flex-wrap:wrap}
+.garage-plan{padding:9px;gap:7px}
+.garage-plan-actions{gap:5px}
+.garage-plan-status{font-size:9px}
+.garage-plan-actions .garage-button{padding:7px 9px;font-size:10px}
 }
 @media(max-width:480px){
 .garage-header{flex-direction:column}
@@ -233,8 +202,13 @@ require __DIR__ . '/includes/header.php';
 .garage-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
 .garage-stat strong{font-size:16px}
 .garage-bike-info h3{font-size:14px}
-.garage-bike-type{padding-left:67px}
-.garage-plan-actions .garage-button{flex:1}
+.garage-plan{align-items:center}
+.garage-plan-actions{gap:4px}
+.garage-plan-actions .garage-button{padding:6px 7px;font-size:9px}
+}
+@media(max-width:360px){
+.garage-plan{align-items:flex-end}
+.garage-plan-actions{flex-direction:column;align-items:flex-end}
 }
 </style>
 
@@ -278,12 +252,12 @@ require __DIR__ . '/includes/header.php';
         </div>
     </div>
 
-    <div class="garage-selected-plan" id="garageSelectedPlan">
+    <div class="garage-selected-plan" id="garageSelectedPlan" hidden>
         <div>
-            <strong id="selectedPlanName">All Build Plans</strong>
-            <span id="selectedPlanDetails">Combined statistics from all your saved build plans.</span>
+            <strong id="selectedPlanName"></strong>
+            <span id="selectedPlanDetails"></span>
         </div>
-        <span class="garage-selection-hint" id="selectedPlanHint">Showing all plans</span>
+        <span class="garage-selection-hint" id="selectedPlanHint"></span>
     </div>
 
     <div class="garage-content-scroll">
@@ -308,59 +282,38 @@ require __DIR__ . '/includes/header.php';
                     $bikePlans = isset($plansByBicycle[$bikeId]) ? $plansByBicycle[$bikeId] : array();
                     ?>
                     <article class="garage-bike-card" data-guide="bicycle-profiles">
-                        <div class="garage-bike-top">
-                            <div class="garage-bike-info">
-                                <div class="garage-bike-icon">
-                                    <?= bicycle_type_icon_svg($bike['bicycle_type'], 'garage') ?>
-                                </div>
-                                <div>
-                                    <h3><?= h($bike['bicycle_name']) ?></h3>
-                                    <p>
-                                        <?= h($bike['bicycle_type']) ?>
-                                        <?= !empty($bike['brand']) ? ' · ' . h($bike['brand']) : '' ?>
-                                        <?= !empty($bike['model']) ? ' · ' . h($bike['model']) : '' ?>
-                                    </p>
-                                    <small><?= count($bikePlans) ?> saved build plan(s)</small>
-                                </div>
+                        <div class="garage-bike-info">
+                            <div class="garage-bike-icon">
+                                <?= bicycle_type_icon_svg($bike['bicycle_type'],'garage') ?>
                             </div>
-                            <div class="garage-bike-type">
-                                <span>Bicycle Profile</span>
-                                <strong><?= h($bike['bicycle_type']) ?></strong>
+                            <div>
+                                <h3><?= h($bike['bicycle_name']) ?></h3>
+                                <p>
+                                    <?= h($bike['bicycle_type']) ?>
+                                    <?= !empty($bike['brand']) ? ' · '.h($bike['brand']) : '' ?>
+                                    <?= !empty($bike['model']) ? ' · '.h($bike['model']) : '' ?>
+                                </p>
                             </div>
                         </div>
 
                         <div class="garage-plans">
-                            <h4>Saved Build Plans</h4>
                             <?php if (!$bikePlans): ?>
                                 <div class="garage-empty">No saved build plans are associated with this bicycle yet.</div>
                             <?php else: ?>
                                 <?php foreach ($bikePlans as $plan): ?>
-                                    <div class="garage-plan" data-plan-select tabindex="0" role="button" aria-pressed="false" aria-label="Select <?= h($plan['build_name']) ?> statistics"
+                                    <div class="garage-plan" data-plan-select tabindex="0" role="button" aria-pressed="false" aria-label="Select build plan statistics for <?= h($bike['bicycle_name']) ?>"
                                         data-plan-id="<?= (int)$plan['project_id'] ?>"
                                         data-plan-name="<?= h($plan['build_name']) ?>"
-                                        data-plan-type="<?= h(!empty($plan['bicycle_type']) ? $plan['bicycle_type'] : $bike['bicycle_type']) ?>"
-                                        data-plan-brand="<?= h($plan['bicycle_brand']) ?>"
-                                        data-plan-model="<?= h($plan['bicycle_model']) ?>"
+                                        data-plan-type="<?= h($bike['bicycle_type']) ?>"
+                                        data-plan-brand="<?= h($bike['brand']) ?>"
+                                        data-plan-model="<?= h($bike['model']) ?>"
                                         data-plan-status="<?= h($plan['status']) ?>"
-                                        data-plan-budget="<?= h(number_format((float)$plan['budget_amount'], 2, '.', '')) ?>"
+                                        data-plan-budget="<?= h(number_format((float)$plan['budget_amount'],2,'.','')) ?>"
                                         data-plan-parts="<?= (int)$plan['selected_parts'] ?>"
-                                        data-plan-cost="<?= h(number_format((float)$plan['parts_total'], 2, '.', '')) ?>">
-                                        <div>
-                                            <h5><?= h($plan['build_name']) ?></h5>
-                                            <p>
-                                                <?= h($plan['bicycle_type'] ? $plan['bicycle_type'] : $bike['bicycle_type']) ?>
-                                                <?= !empty($plan['bicycle_brand']) ? ' · ' . h($plan['bicycle_brand']) : '' ?>
-                                                <?= !empty($plan['bicycle_model']) ? ' · ' . h($plan['bicycle_model']) : '' ?>
-                                            </p>
-                                            <p>
-                                                <?= (int)$plan['selected_parts'] ?> selected part(s)
-                                                · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?>
-                                                · Budget: ₱<?= number_format((float)$plan['budget_amount'], 2) ?>
-                                            </p>
-                                            <p>Status: <?= h($plan['status']) ?></p>
-                                        </div>
+                                        data-plan-cost="<?= h(number_format((float)$plan['parts_total'],2,'.','')) ?>">
                                         <div class="garage-plan-actions">
-                                            <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Plan</a>
+                                            <span class="garage-plan-status">Status: <?= h($plan['status']) ?></span>
+                                            <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id='.(int)$plan['project_id'])) ?>">Edit Plan</a>
                                             <form method="post" class="delete-plan-form">
                                                 <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
                                                 <input type="hidden" name="action" value="delete_plan">
@@ -393,16 +346,15 @@ require __DIR__ . '/includes/header.php';
                         data-plan-brand="<?= h($plan['bicycle_brand']) ?>"
                         data-plan-model="<?= h($plan['bicycle_model']) ?>"
                         data-plan-status="<?= h($plan['status']) ?>"
-                        data-plan-budget="<?= h(number_format((float)$plan['budget_amount'], 2, '.', '')) ?>"
+                        data-plan-budget="<?= h(number_format((float)$plan['budget_amount'],2,'.','')) ?>"
                         data-plan-parts="<?= (int)$plan['selected_parts'] ?>"
-                        data-plan-cost="<?= h(number_format((float)$plan['parts_total'], 2, '.', '')) ?>">
-                        <div>
+                        data-plan-cost="<?= h(number_format((float)$plan['parts_total'],2,'.','')) ?>">
+                        <div class="garage-plan-info">
                             <h5><?= h($plan['build_name']) ?></h5>
-                            <p><?= (int)$plan['selected_parts'] ?> selected part(s) · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?></p>
-                            <p>Budget: ₱<?= number_format((float)$plan['budget_amount'], 2) ?> · Status: <?= h($plan['status']) ?></p>
                         </div>
                         <div class="garage-plan-actions">
-                            <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id=' . (int)$plan['project_id'])) ?>">Edit Plan</a>
+                            <span class="garage-plan-status">Status: <?= h($plan['status']) ?></span>
+                            <a class="garage-button" data-guide="edit-plan" href="<?= h(url('builder/index.php?project_id='.(int)$plan['project_id'])) ?>">Edit Plan</a>
                             <form method="post" class="delete-plan-form">
                                 <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
                                 <input type="hidden" name="action" value="delete_plan">
@@ -441,9 +393,7 @@ require __DIR__ . '/includes/header.php';
 (function() {
     var plans = document.querySelectorAll('[data-plan-select]');
     var selectedPlan = null;
-    var selectedName = document.getElementById('selectedPlanName');
-    var selectedDetails = document.getElementById('selectedPlanDetails');
-    var selectedHint = document.getElementById('selectedPlanHint');
+    var selectedBar = document.getElementById('garageSelectedPlan');
     var budgetValue = document.getElementById('statPlanBudget');
     var partsValue = document.getElementById('statSelectedParts');
     var costValue = document.getElementById('statPartsCost');
@@ -467,7 +417,7 @@ require __DIR__ . '/includes/header.php';
         });
     }
 
-    function updateStatCards(values, notes) {
+    function updateStatCards(values,notes) {
         budgetValue.textContent = values.budget;
         partsValue.textContent = values.parts;
         costValue.textContent = values.cost;
@@ -483,23 +433,21 @@ require __DIR__ . '/includes/header.php';
 
         plans.forEach(function(plan) {
             plan.classList.remove('selected');
-            plan.setAttribute('aria-pressed', 'false');
+            plan.setAttribute('aria-pressed','false');
         });
 
         statCards.forEach(function(card) {
             card.classList.remove('individual-stat');
         });
 
-        selectedName.textContent = 'All Build Plans';
-        selectedDetails.textContent = 'Combined statistics from all your saved build plans.';
-        selectedHint.textContent = 'Showing all plans';
+        selectedBar.hidden = true;
 
         updateStatCards({
             budget: peso(allPlans.budget),
             parts: allPlans.parts.toLocaleString('en-PH'),
             cost: peso(allPlans.cost),
-            remaining: peso(allPlans.budget - allPlans.cost)
-        }, {
+            remaining: peso(allPlans.budget-allPlans.cost)
+        },{
             budget: 'Combined budgets of all plans',
             parts: 'Components across all plans',
             cost: 'Combined cost of selected parts',
@@ -508,40 +456,31 @@ require __DIR__ . '/includes/header.php';
     }
 
     function selectPlan(plan) {
-        var name = plan.getAttribute('data-plan-name') || 'Build Plan';
-        var type = plan.getAttribute('data-plan-type') || '';
-        var brand = plan.getAttribute('data-plan-brand') || '';
-        var model = plan.getAttribute('data-plan-model') || '';
-        var status = plan.getAttribute('data-plan-status') || '';
         var budget = parseFloat(plan.getAttribute('data-plan-budget')) || 0;
-        var parts = parseInt(plan.getAttribute('data-plan-parts'), 10) || 0;
+        var parts = parseInt(plan.getAttribute('data-plan-parts'),10) || 0;
         var cost = parseFloat(plan.getAttribute('data-plan-cost')) || 0;
-        var remaining = budget - cost;
+        var remaining = budget-cost;
 
         selectedPlan = plan;
 
         plans.forEach(function(item) {
             var active = item === plan;
-            item.classList.toggle('selected', active);
-            item.setAttribute('aria-pressed', active ? 'true' : 'false');
+            item.classList.toggle('selected',active);
+            item.setAttribute('aria-pressed',active ? 'true' : 'false');
         });
 
         statCards.forEach(function(card) {
             card.classList.add('individual-stat');
         });
 
-        selectedName.textContent = name;
-        selectedDetails.textContent = [type, brand, model, status].filter(function(value) {
-            return value !== '';
-        }).join(' · ');
-        selectedHint.textContent = 'Individual plan · Click the same plan again to show all plans';
+        selectedBar.hidden = true;
 
         updateStatCards({
             budget: budget > 0 ? peso(budget) : 'Not set',
             parts: parts.toLocaleString('en-PH'),
             cost: peso(cost),
             remaining: budget > 0 ? peso(remaining) : 'Not set'
-        }, {
+        },{
             budget: 'Budget for this build plan',
             parts: 'Components in this plan',
             cost: 'Total planned cost of this plan',
@@ -550,20 +489,17 @@ require __DIR__ . '/includes/header.php';
     }
 
     function togglePlan(plan) {
-        if (selectedPlan === plan) {
-            showAllPlans();
-        } else {
-            selectPlan(plan);
-        }
+        if (selectedPlan === plan) showAllPlans();
+        else selectPlan(plan);
     }
 
     plans.forEach(function(plan) {
-        plan.addEventListener('click', function(event) {
+        plan.addEventListener('click',function(event) {
             if (event.target.closest('.garage-plan-actions')) return;
             togglePlan(plan);
         });
 
-        plan.addEventListener('keydown', function(event) {
+        plan.addEventListener('keydown',function(event) {
             if (event.target !== plan) return;
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -573,7 +509,7 @@ require __DIR__ . '/includes/header.php';
     });
 
     document.querySelectorAll('.delete-plan-form').forEach(function(form) {
-        form.addEventListener('submit', function(event) {
+        form.addEventListener('submit',function(event) {
             if (!confirm('Are you sure you want to delete this build plan? Its selected parts and unused bicycle profile will also be deleted.')) {
                 event.preventDefault();
             }

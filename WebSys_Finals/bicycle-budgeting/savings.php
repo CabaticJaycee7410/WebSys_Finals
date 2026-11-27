@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -11,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($csrfToken)) {
         $errors[] = 'Session expired. Refresh and try again.';
     }
+
     $projectId = isset($_POST['project_id']) ? (int)$_POST['project_id'] : 0;
     $amountInput = isset($_POST['amount']) ? $_POST['amount'] : null;
     $amount = filter_var($amountInput, FILTER_VALIDATE_FLOAT);
@@ -29,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$dateObject || $dateObject->format('Y-m-d') !== $date) {
         $errors[] = 'Enter a valid date.';
     }
+
     if (!$errors) {
         $stmt = $pdo->prepare('INSERT INTO savings_records (user_id, project_id, amount, saving_date, notes) VALUES (?, ?, ?, ?, ?)');
         $stmt->execute(array($userId, $projectId, $amount, $date, $notes !== '' ? $notes : null));
@@ -57,6 +60,23 @@ $remaining = max(0, $totalBudget - $totalSavings);
 
 require __DIR__ . '/includes/header.php';
 ?>
+<style>
+.history-vertical-slider{width:100%;margin-top:14px}
+.history-vertical-viewport{height:150px;width:100%;overflow-x:hidden;overflow-y:auto;border-radius:15px;scroll-snap-type:y mandatory;scroll-behavior:smooth;overscroll-behavior-y:contain;scrollbar-width:thin;scrollbar-color:#53d9e8 rgba(120,205,220,.12)}
+.history-vertical-viewport::-webkit-scrollbar{width:7px}
+.history-vertical-viewport::-webkit-scrollbar-track{background:rgba(120,205,220,.1);border-radius:10px}
+.history-vertical-viewport::-webkit-scrollbar-thumb{background:#53d9e8;border-radius:10px}
+.history-vertical-track{display:flex;flex-direction:column;gap:10px;width:100%}
+.history-vertical-slide{display:flex;flex:0 0 150px;width:100%;height:150px;min-width:0;box-sizing:border-box;justify-content:space-between;align-items:center;gap:20px;padding:24px;border:1px solid rgba(120,205,220,.23);border-radius:15px;background:rgba(22,68,93,.68);box-shadow:var(--shadow);scroll-snap-align:start;scroll-snap-stop:always;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.history-vertical-info{flex:1;min-width:0}
+.history-vertical-info strong{display:block;color:#e0f5f8;font-size:16px;overflow-wrap:anywhere}
+.history-vertical-info p{margin:7px 0;color:#a9cbd6;font-size:13px;overflow-wrap:anywhere}
+.history-vertical-info small{color:#91b8c5;font-size:11px}
+.history-vertical-amount{flex-shrink:0;color:#53d9e8;font-size:24px;font-weight:800;text-align:right}
+.history-vertical-hint{margin:9px 0 0;color:#91b8c5;font-size:11px;text-align:center}
+@media(max-width:600px){.history-vertical-slide{padding:18px;gap:12px}.history-vertical-info strong{font-size:14px}.history-vertical-info p{font-size:12px}.history-vertical-amount{font-size:19px}}
+@media(max-width:380px){.history-vertical-viewport{height:165px}.history-vertical-slide{height:165px;flex-basis:165px;align-items:flex-start;flex-direction:column;padding:15px;gap:8px}.history-vertical-amount{align-self:flex-end;font-size:20px}}
+</style>
 <div class="page-header">
     <div>
         <p class="eyebrow">YOUR SAVINGS GOALS</p>
@@ -127,17 +147,24 @@ require __DIR__ . '/includes/header.php';
     <?php if (!$records): ?>
         <div class="empty-state">No savings records yet.</div>
     <?php else: ?>
-        <div class="project-list">
-            <?php foreach ($records as $record): ?>
-                <article class="savings-item">
-                    <div>
-                        <strong><?= h($record['project_name'] ? $record['project_name'] : 'Unassigned build') ?></strong>
-                        <p><?= h($record['notes'] ? $record['notes'] : 'Savings contribution') ?></p>
-                        <small><?= h($record['saving_date']) ?></small>
-                    </div>
-                    <strong><?= money($record['amount']) ?></strong>
-                </article>
-            <?php endforeach; ?>
+        <div class="history-vertical-slider">
+            <div class="history-vertical-viewport">
+                <div class="history-vertical-track">
+                    <?php foreach ($records as $record): ?>
+                        <article class="history-vertical-slide">
+                            <div class="history-vertical-info">
+                                <strong><?= h($record['project_name'] ? $record['project_name'] : 'Unassigned build') ?></strong>
+                                <p><?= h($record['notes'] ? $record['notes'] : 'Savings contribution') ?></p>
+                                <small><?= h($record['saving_date']) ?></small>
+                            </div>
+                            <strong class="history-vertical-amount"><?= money($record['amount']) ?></strong>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php if (count($records) > 1): ?>
+                <p class="history-vertical-hint">Scroll up or down to browse your savings records</p>
+            <?php endif; ?>
         </div>
     <?php endif; ?>
 </section>
