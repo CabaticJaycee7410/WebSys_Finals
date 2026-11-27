@@ -579,3 +579,4 @@ window.BICYCLE_BUILDER = <?= json_encode(array(
     });
 })();
 </script>
+<?php require __DIR__ . '/../includes/footer.php'; ?>

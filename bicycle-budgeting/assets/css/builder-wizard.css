@@ -207,3 +207,120 @@
 }
 
 .bike-type-icon svg{display:block;width:85px;height:55px;overflow:visible}.bike-type-svg .bike-tire{fill:none;stroke:#172d3d;stroke-width:5}.bike-type-svg .bike-rim{fill:none;stroke:#8ba8b8;stroke-width:1.7}.bike-type-svg .bike-spoke{stroke:#718da2;stroke-width:.9}.bike-type-svg .bike-frame{fill:none;stroke:#26c18a;stroke-width:4.2;stroke-linecap:round;stroke-linejoin:round}.bike-type-svg .bike-metal{fill:none;stroke:#d2e4ed;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.bike-type-svg .bike-seat{fill:#172d3d;stroke:#d2e4ed;stroke-width:1.4}.bike-type-svg .bike-accent{fill:none;stroke:#f0b84e;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+.mobile-menu-toggle,
+.mobile-menu-close,
+.mobile-menu-backdrop {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body > #mobileMenuToggle {
+        display: flex !important;
+        position: fixed !important;
+        top: 14px !important;
+        left: 14px !important;
+        width: 44px !important;
+        height: 44px !important;
+        padding: 10px !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 5px !important;
+        background: #08283b !important;
+        border: 1px solid rgba(255,255,255,.15) !important;
+        border-radius: 9px !important;
+        cursor: pointer !important;
+        z-index: 2147483002 !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        touch-action: manipulation;
+    }
+
+    body > #mobileMenuToggle span {
+        display: block !important;
+        width: 22px !important;
+        height: 2px !important;
+        background: #08b9d0 !important;
+        border-radius: 3px;
+    }
+
+    body.mobile-menu-active > #mobileMenuToggle {
+        display: none !important;
+    }
+
+    .app-shell > #appSidebar.sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        width: min(290px, 85vw) !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        transform: translateX(-110%) !important;
+        visibility: hidden !important;
+        z-index: 2147483001 !important;
+    }
+
+    body > #appSidebar.sidebar.mobile-menu-open {
+        display: flex !important;
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        width: min(290px, 85vw) !important;
+        max-width: 290px !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        flex-direction: column !important;
+        background: #08283b !important;
+        transform: translateX(0) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        z-index: 2147483001 !important;
+    }
+
+    body > #mobileMenuBackdrop.mobile-menu-visible {
+        display: block !important;
+        position: fixed !important;
+        inset: 0 !important;
+        background: rgba(0,0,0,.6) !important;
+        z-index: 2147483000 !important;
+    }
+
+    #appSidebar .mobile-menu-close {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        align-self: flex-end;
+        width: 38px;
+        height: 38px;
+        margin: 10px 12px;
+        color: #fff;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 8px;
+        font-size: 27px;
+        cursor: pointer;
+    }
+
+    .app-main {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+    }
+
+    .app-main > .container {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+        padding-top: 70px !important;
+    }
+
+    body.mobile-menu-active {
+        overflow: hidden !important;
+    }
+}

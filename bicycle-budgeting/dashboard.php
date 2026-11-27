@@ -7,11 +7,11 @@ $pageTitle = 'Dashboard';
 $pdo = require __DIR__ . '/config/database.php';
 $userId = current_user_id();
 
-$stmt = $pdo->prepare("SELECT COUNT(*) AS plans, COALESCE(SUM(budget_amount),0) AS budget FROM projects WHERE user_id = ?");
+$stmt = $pdo->prepare("SELECT COUNT(*) AS plans,COALESCE(SUM(budget_amount),0) AS budget FROM projects WHERE user_id = ?");
 $stmt->execute(array($userId));
 $projectSummary = $stmt->fetch();
 
-$stmt = $pdo->prepare("SELECT COUNT(*) AS parts, COALESCE(SUM(pbp.price),0) AS planned FROM project_build_parts pbp INNER JOIN projects p ON p.project_id = pbp.project_id WHERE p.user_id = ?");
+$stmt = $pdo->prepare("SELECT COUNT(*) AS parts,COALESCE(SUM(pbp.price),0) AS planned FROM project_build_parts pbp INNER JOIN projects p ON p.project_id = pbp.project_id WHERE p.user_id = ?");
 $stmt->execute(array($userId));
 $partSummary = $stmt->fetch();
 
@@ -69,6 +69,7 @@ require __DIR__ . '/includes/header.php';
 .dashboard-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-shrink:0}
 .dashboard-header h1{font-size:clamp(22px,2.2vw,29px);margin:0 0 4px}
 .dashboard-header p{font-size:12px;margin:0;color:#a9cbd6}
+.dashboard-plan-mode{display:block;margin-top:4px;color:#53d9e8;font-size:10px}
 .dashboard-new-build{white-space:nowrap}
 .dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 11px;flex-shrink:0}
 .dashboard-stats .stat-card{min-width:0;padding:13px;border-radius:11px}
@@ -104,7 +105,7 @@ require __DIR__ . '/includes/header.php';
 .dashboard-garage-plan-cost span{display:block;color:#91b8c5;font-size:10px}
 .dashboard-garage-plan-cost strong{display:block;color:#53d9e8;font-size:17px;margin:4px 0}
 .dashboard-garage-plan-cost small{display:block;color:#a9cbd6;font-size:10px}
-.dashboard-garage-plan-cost a{display:inline-block;margin-top:6px;color:#53d9e8;font-size:11px;font-weight:600;text-decoration:none}
+.dashboard-garage-plan-cost a{display:inline-block;margin-top:6px;color:#53d9e8;font-size:11px;font-weight:600;text-decoration:none;position:relative;z-index:2}
 .dashboard-garage-plan-cost a:hover{color:#a5e5e9}
 .dashboard-garage-empty{margin-top:10px;padding:10px;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:8px;color:#a9cbd6;font-size:11px}
 .dashboard-unassigned{margin-top:15px}
@@ -115,7 +116,7 @@ require __DIR__ . '/includes/header.php';
 .dashboard-unassigned .project-card-details p{color:#a9cbd6;font-size:10px}
 .dashboard-unassigned .project-card-budget strong{color:#53d9e8;font-size:15px}
 .dashboard-unassigned .project-card-budget span,.dashboard-unassigned .project-card-budget small{color:#a9cbd6;font-size:10px}
-.dashboard-unassigned .project-card-budget a{color:#53d9e8;font-size:11px}
+.dashboard-unassigned .project-card-budget a{color:#53d9e8;font-size:11px;position:relative;z-index:2}
 .dashboard-unassigned .section-heading h3{color:#d9f2f5;font-size:15px}
 .dashboard-unassigned .section-heading p{color:#a9cbd6;font-size:10px}
 .dashboard-projects>.section-heading h2{color:#d9f2f5}
@@ -124,6 +125,8 @@ require __DIR__ . '/includes/header.php';
 .dashboard-page .empty-state{padding:22px 16px}
 .dashboard-page .empty-state h3{font-size:16px}
 .dashboard-page .empty-state p{font-size:11px}
+.dashboard-garage-plan[data-plan-select],.dashboard-unassigned .project-card[data-plan-select]{cursor:pointer;pointer-events:auto;position:relative;z-index:1;transition:background .2s,border-color .2s}
+.dashboard-garage-plan[data-plan-select]:hover,.dashboard-garage-plan.plan-selected,.dashboard-unassigned .project-card[data-plan-select]:hover,.dashboard-unassigned .project-card.plan-selected{background:rgba(8,105,128,.35);border-color:#53d9e8}
 @media(max-width:1000px){
 .dashboard-page{height:calc(100vh - 70px);height:calc(100svh - 70px)}
 .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -165,6 +168,7 @@ require __DIR__ . '/includes/header.php';
         <div>
             <h1>Welcome back, <?= h(isset($_SESSION['user_name']) ? $_SESSION['user_name'] : 'Cyclist') ?>!</h1>
             <p>Here's an overview of your bicycles, build plans, and budget.</p>
+            <small class="dashboard-plan-mode" id="dashboardPlanMode">Showing combined totals for all build plans</small>
         </div>
         <a class="dashboard-new-build" href="<?= h(url('builder/index.php')) ?>">＋ Build New Bike</a>
     </div>
@@ -176,14 +180,14 @@ require __DIR__ . '/includes/header.php';
             <p>Bicycles registered in your account</p>
         </article>
         <article class="stat-card">
-            <span>Total Build Budget</span>
-            <h2><?= money($totalBudget) ?></h2>
-            <p>Combined budgets for your build plans</p>
+            <span id="dashboardBudgetLabel">Total Build Budget</span>
+            <h2 id="dashboardBudgetValue"><?= money($totalBudget) ?></h2>
+            <p id="dashboardBudgetNote">Combined budgets for your build plans</p>
         </article>
         <article class="stat-card">
-            <span>Planned Parts Cost</span>
-            <h2><?= money($plannedCost) ?></h2>
-            <p>Estimated value of selected parts</p>
+            <span id="dashboardCostLabel">Planned Parts Cost</span>
+            <h2 id="dashboardCostValue"><?= money($plannedCost) ?></h2>
+            <p id="dashboardCostNote">Estimated value of selected parts</p>
         </article>
         <article class="stat-card">
             <span>Total Savings</span>
@@ -194,9 +198,9 @@ require __DIR__ . '/includes/header.php';
 
     <section class="dashboard-overview">
         <article class="overview-card">
-            <h3>Unallocated Build Budget</h3>
-            <div class="overview-number"><?= money($remainingBudget) ?></div>
-            <p>Combined build budget minus planned parts cost.</p>
+            <h3 id="dashboardRemainingLabel">Unallocated Build Budget</h3>
+            <div class="overview-number" id="dashboardRemainingValue"><?= money($remainingBudget) ?></div>
+            <p id="dashboardRemainingNote">Combined build budget minus planned parts cost.</p>
             <a href="<?= h(url('bicycles.php')) ?>">View My Garage →</a>
         </article>
         <article class="overview-card">
@@ -206,9 +210,9 @@ require __DIR__ . '/includes/header.php';
             <a href="<?= h(url('savings.php')) ?>">Track Savings →</a>
         </article>
         <article class="overview-card">
-            <h3>Selected Bicycle Parts</h3>
-            <div class="overview-number"><?= number_format((int)$partSummary['parts']) ?></div>
-            <p>Components selected across your saved bicycle plans.</p>
+            <h3 id="dashboardPartsLabel">Selected Bicycle Parts</h3>
+            <div class="overview-number" id="dashboardPartsValue"><?= number_format((int)$partSummary['parts']) ?></div>
+            <p id="dashboardPartsNote">Components selected across your saved bicycle plans.</p>
             <a href="<?= h(url('bicycles.php')) ?>">View Garage →</a>
         </article>
     </section>
@@ -222,7 +226,7 @@ require __DIR__ . '/includes/header.php';
             <a href="<?= h(url('bicycles.php')) ?>">Open My Garage →</a>
         </div>
 
-        <div class="dashboard-garage-list">
+        <div class="dashboard-garage-list" id="dashboardGarageList">
             <?php if (!$garageItems && !$unassignedPlans): ?>
                 <div class="empty-state">
                     <h3>Your garage is waiting for its first bicycle</h3>
@@ -245,7 +249,7 @@ require __DIR__ . '/includes/header.php';
                         </div>
 
                         <?php if (!empty($item['project_id'])): ?>
-                            <div class="dashboard-garage-plan">
+                            <div class="dashboard-garage-plan" data-plan-select data-plan-id="<?= (int)$item['project_id'] ?>" data-plan-name="<?= h($item['project_name']) ?>" data-plan-budget="<?= h(number_format((float)$item['budget_amount'],2,'.','')) ?>" data-plan-cost="<?= h(number_format((float)$item['planned_cost'],2,'.','')) ?>" data-plan-parts="<?= (int)$item['selected_parts'] ?>" role="button" tabindex="0" aria-pressed="false">
                                 <div class="dashboard-garage-plan-info">
                                     <h4><?= h($item['project_name']) ?></h4>
                                     <p>
@@ -277,7 +281,7 @@ require __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                         <?php foreach ($unassignedPlans as $plan): ?>
-                            <article class="project-card">
+                            <article class="project-card" data-plan-select data-plan-id="<?= (int)$plan['project_id'] ?>" data-plan-name="<?= h($plan['project_name']) ?>" data-plan-budget="<?= h(number_format((float)$plan['budget_amount'],2,'.','')) ?>" data-plan-cost="<?= h(number_format((float)$plan['planned_cost'],2,'.','')) ?>" data-plan-parts="<?= (int)$plan['selected_parts'] ?>" role="button" tabindex="0" aria-pressed="false">
                                 <div class="project-card-main">
                                     <div class="project-bike-icon">🔧</div>
                                     <div class="project-card-details">
@@ -304,5 +308,108 @@ require __DIR__ . '/includes/header.php';
         </div>
     </section>
 </div>
+
+<script>
+(function(){
+    function initDashboardPlans(){
+        var list = document.getElementById('dashboardGarageList');
+        if (!list) return;
+
+        var selectedPlan = null;
+        var totalBudget = <?= json_encode($totalBudget) ?>;
+        var totalCost = <?= json_encode($plannedCost) ?>;
+        var totalParts = <?= json_encode((int)$partSummary['parts']) ?>;
+
+        var ids = ['dashboardPlanMode','dashboardBudgetLabel','dashboardBudgetValue','dashboardBudgetNote','dashboardCostLabel','dashboardCostValue','dashboardCostNote','dashboardRemainingLabel','dashboardRemainingValue','dashboardRemainingNote','dashboardPartsLabel','dashboardPartsValue','dashboardPartsNote'];
+        var e = {};
+        ids.forEach(function(id){e[id] = document.getElementById(id);});
+
+        function money(value){
+            return '₱' + Number(value || 0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+        }
+
+        function reset(){
+            selectedPlan = null;
+            list.querySelectorAll('[data-plan-select]').forEach(function(plan){
+                plan.classList.remove('plan-selected');
+                plan.setAttribute('aria-pressed','false');
+            });
+            e.dashboardPlanMode.textContent = 'Showing combined totals for all build plans';
+            e.dashboardBudgetLabel.textContent = 'Total Build Budget';
+            e.dashboardBudgetValue.textContent = money(totalBudget);
+            e.dashboardBudgetNote.textContent = 'Combined budgets for your build plans';
+            e.dashboardCostLabel.textContent = 'Planned Parts Cost';
+            e.dashboardCostValue.textContent = money(totalCost);
+            e.dashboardCostNote.textContent = 'Estimated value of selected parts';
+            e.dashboardRemainingLabel.textContent = 'Unallocated Build Budget';
+            e.dashboardRemainingValue.textContent = money(totalBudget-totalCost);
+            e.dashboardRemainingNote.textContent = 'Combined build budget minus planned parts cost.';
+            e.dashboardPartsLabel.textContent = 'Selected Bicycle Parts';
+            e.dashboardPartsValue.textContent = Number(totalParts).toLocaleString('en-PH');
+            e.dashboardPartsNote.textContent = 'Components selected across your saved bicycle plans.';
+        }
+
+        function select(plan){
+            selectedPlan = plan;
+            list.querySelectorAll('[data-plan-select]').forEach(function(item){
+                item.classList.toggle('plan-selected',item === plan);
+                item.setAttribute('aria-pressed',item === plan ? 'true' : 'false');
+            });
+
+            var name = plan.getAttribute('data-plan-name') || 'Selected Build Plan';
+            var budget = Number(plan.getAttribute('data-plan-budget')) || 0;
+            var cost = Number(plan.getAttribute('data-plan-cost')) || 0;
+            var parts = Number(plan.getAttribute('data-plan-parts')) || 0;
+
+            e.dashboardPlanMode.textContent = 'Showing individual statistics for: ' + name;
+            e.dashboardBudgetLabel.textContent = 'Selected Plan Budget';
+            e.dashboardBudgetValue.textContent = money(budget);
+            e.dashboardBudgetNote.textContent = name;
+            e.dashboardCostLabel.textContent = 'Selected Plan Parts Cost';
+            e.dashboardCostValue.textContent = money(cost);
+            e.dashboardCostNote.textContent = 'Estimated cost of this plan’s selected parts';
+            e.dashboardRemainingLabel.textContent = 'Remaining Plan Budget';
+            e.dashboardRemainingValue.textContent = money(budget-cost);
+            e.dashboardRemainingNote.textContent = 'Selected plan budget minus its planned parts cost.';
+            e.dashboardPartsLabel.textContent = 'Selected Plan Components';
+            e.dashboardPartsValue.textContent = parts.toLocaleString('en-PH');
+            e.dashboardPartsNote.textContent = 'Components selected for this build plan.';
+        }
+
+        function findPlan(target){
+            while(target && target !== list){
+                if(target.hasAttribute && target.hasAttribute('data-plan-select')) return target;
+                target = target.parentNode;
+            }
+            return null;
+        }
+
+        list.addEventListener('click',function(event){
+            var plan = findPlan(event.target);
+            if(!plan) return;
+            if(event.target.closest && event.target.closest('a')) return;
+            if(selectedPlan === plan) reset();
+            else select(plan);
+        });
+
+        list.addEventListener('keydown',function(event){
+            var plan = findPlan(event.target);
+            if(!plan || (event.key !== 'Enter' && event.key !== ' ')) return;
+            if(event.target.closest && event.target.closest('a')) return;
+            event.preventDefault();
+            if(selectedPlan === plan) reset();
+            else select(plan);
+        });
+
+        reset();
+    }
+
+    if(document.readyState === 'loading'){
+        document.addEventListener('DOMContentLoaded',initDashboardPlans);
+    }else{
+        initDashboardPlans();
+    }
+})();
+</script>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

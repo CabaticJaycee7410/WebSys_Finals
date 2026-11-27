@@ -1,3 +1,4 @@
+
 <?php
 require_once __DIR__ . '/includes/functions.php';
 require_login();
@@ -11,7 +12,7 @@ if (!in_array($section, $validSections, true)) {
     $section = 'personal';
 }
 
-$stmt = $pdo->prepare('SELECT user_id, full_name, email, password_hash, profile_picture FROM users WHERE user_id = ? LIMIT 1');
+$stmt = $pdo->prepare('SELECT user_id, full_name, first_name, last_name, email, phone_number, birthday, gender, password_hash, profile_picture FROM users WHERE user_id = ? LIMIT 1');
 $stmt->execute(array($userId));
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -19,6 +20,12 @@ if (!$user) {
     $_SESSION = array();
     session_destroy();
     redirect('login.php');
+}
+
+if (trim((string)$user['first_name']) === '' && trim((string)$user['last_name']) === '') {
+    $nameParts = preg_split('/\s+/', trim($user['full_name']), 2);
+    $user['first_name'] = isset($nameParts[0]) ? $nameParts[0] : '';
+    $user['last_name'] = isset($nameParts[1]) ? $nameParts[1] : '';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -34,23 +41,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($csrfToken)) {
         $errors[] = 'Your session expired. Refresh the page and try again.';
     } elseif ($action === 'update_profile') {
-        $fullName = trim((string)(isset($_POST['full_name']) ? $_POST['full_name'] : ''));
+        $firstName = trim((string)(isset($_POST['first_name']) ? $_POST['first_name'] : ''));
+        $lastName = trim((string)(isset($_POST['last_name']) ? $_POST['last_name'] : ''));
+        $fullName = trim($firstName . ' ' . $lastName);
         $email = strtolower(trim((string)(isset($_POST['email']) ? $_POST['email'] : '')));
+        $phoneNumber = trim((string)(isset($_POST['phone_number']) ? $_POST['phone_number'] : ''));
+        $birthday = trim((string)(isset($_POST['birthday']) ? $_POST['birthday'] : ''));
+        $gender = isset($_POST['gender']) ? $_POST['gender'] : '';
 
-        if ($fullName === '' || strlen($fullName) > 150) {
-            $errors[] = 'Enter a valid name with a maximum of 150 characters.';
+        if ($firstName === '' || strlen($firstName) > 75) {
+            $errors[] = 'Enter a valid first name with a maximum of 75 characters.';
+        }
+        if ($lastName === '' || strlen($lastName) > 75) {
+            $errors[] = 'Enter a valid last name with a maximum of 75 characters.';
+        }
+        if (strlen($fullName) > 150) {
+            $errors[] = 'Your complete name must not exceed 150 characters.';
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) {
             $errors[] = 'Enter a valid email address with a maximum of 190 characters.';
         }
+        if ($phoneNumber !== '' && (!preg_match('/^[0-9+\-\s().]{7,30}$/', $phoneNumber))) {
+            $errors[] = 'Enter a valid phone number.';
+        }
+        if ($birthday === '') {
+            $errors[] = 'Please enter your birthday.';
+        } else {
+            $birthdayDate = DateTime::createFromFormat('!Y-m-d', $birthday);
+            if (!$birthdayDate || $birthdayDate->format('Y-m-d') !== $birthday || $birthday > date('Y-m-d')) {
+                $errors[] = 'Enter a valid birthday that is not in the future.';
+            }
+        }
+        if (!in_array($gender, array('Male', 'Female'), true)) {
+            $errors[] = 'Please select Male or Female.';
+        }
+
         if (empty($errors)) {
             $check = $pdo->prepare('SELECT user_id FROM users WHERE email = ? AND user_id != ? LIMIT 1');
             $check->execute(array($email, $userId));
+
             if ($check->fetch(PDO::FETCH_ASSOC)) {
                 $errors[] = 'That email address is already being used by another account.';
             } else {
-                $update = $pdo->prepare('UPDATE users SET full_name = ?, email = ? WHERE user_id = ?');
-                $update->execute(array($fullName, $email, $userId));
+                $update = $pdo->prepare('UPDATE users SET first_name = ?, last_name = ?, full_name = ?, email = ?, phone_number = ?, birthday = ?, gender = ? WHERE user_id = ?');
+                $update->execute(array($firstName, $lastName, $fullName, $email, $phoneNumber !== '' ? $phoneNumber : null, $birthday, $gender, $userId));
                 $_SESSION['user_name'] = $fullName;
                 $_SESSION['user_email'] = $email;
                 set_flash('success', 'Your personal information has been updated.');
@@ -99,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $imageInfo = @getimagesize($file['tmp_name']);
                 $allowedTypes = array(IMAGETYPE_JPEG => 'jpg', IMAGETYPE_PNG => 'png');
+
                 if ($imageInfo === false || !isset($allowedTypes[$imageInfo[2]])) {
                     $errors[] = 'Only valid JPG and PNG images are allowed.';
                 } else {
@@ -110,8 +145,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $errors[] = 'The uploaded image file is invalid.';
                         }
                     }
+
                     if (empty($errors)) {
                         $uploadDirectory = __DIR__ . '/uploads/profile-pictures/';
+
                         if (!is_dir($uploadDirectory) || !is_writable($uploadDirectory)) {
                             $errors[] = 'The profile picture folder is missing or not writable.';
                         } else {
@@ -128,11 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 } else {
                                     throw new Exception('Secure random generation is unavailable.');
                                 }
+
                                 $newFileName = $fileName . '.' . $allowedTypes[$imageInfo[2]];
                                 $destination = $uploadDirectory . $newFileName;
                                 $relativePath = 'uploads/profile-pictures/' . $newFileName;
+
                                 if (move_uploaded_file($file['tmp_name'], $destination)) {
                                     $update = $pdo->prepare('UPDATE users SET profile_picture = ? WHERE user_id = ?');
+
                                     try {
                                         $update->execute(array($relativePath, $userId));
                                     } catch (Exception $e) {
@@ -141,8 +181,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         }
                                         throw $e;
                                     }
+
                                     $oldPicture = $user['profile_picture'];
                                     $_SESSION['user_profile_picture'] = $relativePath;
+
                                     if (is_string($oldPicture) && strpos($oldPicture, 'uploads/profile-pictures/') === 0) {
                                         $oldFileName = basename($oldPicture);
                                         if ($oldFileName !== $newFileName) {
@@ -152,6 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             }
                                         }
                                     }
+
                                     set_flash('success', 'Your profile picture has been updated.');
                                     redirect('account.php?section=picture');
                                 } else {
@@ -179,6 +222,13 @@ if (!empty($user['profile_picture'])) {
     }
 }
 
+$formFirstName = isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['first_name']) ? $_POST['first_name'] : '') : $user['first_name'];
+$formLastName = isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['last_name']) ? $_POST['last_name'] : '') : $user['last_name'];
+$formEmail = isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['email']) ? $_POST['email'] : '') : $user['email'];
+$formPhone = isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['phone_number']) ? $_POST['phone_number'] : '') : $user['phone_number'];
+$formBirthday = isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['birthday']) ? $_POST['birthday'] : '') : $user['birthday'];
+$formGender = isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['gender']) ? $_POST['gender'] : '') : $user['gender'];
+
 $pageTitle = 'Account Settings';
 require __DIR__ . '/includes/header.php';
 ?>
@@ -190,6 +240,7 @@ require __DIR__ . '/includes/header.php';
     </div>
     <a href="<?= h(url('dashboard.php')) ?>" class="secondary-button">← Back to Dashboard</a>
 </section>
+
 <?php if (!empty($errors)): ?>
     <div class="alert error account-errors">
         <?php foreach ($errors as $error): ?>
@@ -197,12 +248,8 @@ require __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
 <div class="account-layout account-layout-wide">
-    <nav class="account-section-nav" aria-label="Account settings sections">
-        <a class="<?= $section === 'picture' ? 'active' : '' ?>" href="<?= h(url('account.php?section=picture')) ?>">Profile Picture</a>
-        <a class="<?= $section === 'personal' ? 'active' : '' ?>" href="<?= h(url('account.php?section=personal')) ?>">Personal Information</a>
-        <a class="<?= $section === 'password' ? 'active' : '' ?>" href="<?= h(url('account.php?section=password')) ?>">Change Password</a>
-    </nav>
     <section class="card account-form-card account-form-card-wide">
         <?php if ($section === 'picture'): ?>
             <h2>Profile Picture</h2>
@@ -227,25 +274,56 @@ require __DIR__ . '/includes/header.php';
                     <a href="<?= h(url('dashboard.php')) ?>" class="secondary-button">Cancel</a>
                 </div>
             </form>
+
         <?php elseif ($section === 'personal'): ?>
             <h2>Personal Information</h2>
-            <p class="muted-text">Update the name and email address connected to your account.</p>
+            <p class="muted-text">Update your personal details connected to your account.</p>
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
                 <input type="hidden" name="action" value="update_profile">
-                <div class="form-group">
-                    <label for="full_name">Full Name</label>
-                    <input type="text" id="full_name" name="full_name" maxlength="150" value="<?= h(isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['full_name']) ? $_POST['full_name'] : '') : $user['full_name']) ?>" required>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="first_name">First Name</label>
+                        <input type="text" id="first_name" name="first_name" maxlength="75" value="<?= h($formFirstName) ?>" placeholder="Enter your first name" autocomplete="given-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last_name">Last Name</label>
+                        <input type="text" id="last_name" name="last_name" maxlength="75" value="<?= h($formLastName) ?>" placeholder="Enter your last name" autocomplete="family-name" required>
+                    </div>
                 </div>
+
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" maxlength="190" value="<?= h(isset($_POST['action']) && $_POST['action'] === 'update_profile' ? (isset($_POST['email']) ? $_POST['email'] : '') : $user['email']) ?>" required>
+                    <input type="email" id="email" name="email" maxlength="190" value="<?= h($formEmail) ?>" placeholder="Enter your email address" autocomplete="email" required>
                 </div>
+
+                <div class="form-group">
+                    <label for="phone_number">Phone Number</label>
+                    <input type="tel" id="phone_number" name="phone_number" maxlength="30" value="<?= h($formPhone) ?>" placeholder="Example: 09123456789" autocomplete="tel">
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="birthday">Birthday</label>
+                        <input type="date" id="birthday" name="birthday" value="<?= h($formBirthday) ?>" max="<?= date('Y-m-d') ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male" <?= $formGender === 'Male' ? 'selected' : '' ?>>Male</option>
+                            <option value="Female" <?= $formGender === 'Female' ? 'selected' : '' ?>>Female</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="account-form-actions">
                     <button type="submit" class="btn">Save Changes</button>
                     <a href="<?= h(url('dashboard.php')) ?>" class="secondary-button">Cancel</a>
                 </div>
             </form>
+
         <?php elseif ($section === 'password'): ?>
             <h2>Change Password</h2>
             <p class="muted-text">Enter your current password before choosing a new one.</p>
@@ -273,4 +351,5 @@ require __DIR__ . '/includes/header.php';
         <?php endif; ?>
     </section>
 </div>
+
 <?php require __DIR__ . '/includes/footer.php'; ?>

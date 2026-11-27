@@ -131,6 +131,8 @@ foreach ($plans as $plan) {
     }
 }
 
+$totalRemainingBudget = $totalBudget - $totalPartsCost;
+
 require __DIR__ . '/includes/header.php';
 ?>
 
@@ -143,11 +145,16 @@ require __DIR__ . '/includes/header.php';
 .garage-header .eyebrow{font-size:10px;letter-spacing:1.3px;margin:0 0 4px;color:#53d9e8}
 .garage-header .dashboard-guide-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .garage-header .dashboard-guide-actions a,.garage-header .dashboard-guide-actions button{white-space:nowrap}
-.garage-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 12px;flex-shrink:0}
-.garage-stat{min-width:0;background:rgba(22,68,93,.67);border:1px solid rgba(120,205,220,.24);border-top:3px solid #08b9d0;border-radius:11px;padding:13px;box-shadow:0 8px 20px rgba(0,15,30,.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.garage-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 10px;flex-shrink:0}
+.garage-stat{min-width:0;background:rgba(22,68,93,.67);border:1px solid rgba(120,205,220,.24);border-top:3px solid #08b9d0;border-radius:11px;padding:13px;box-shadow:0 8px 20px rgba(0,15,30,.2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transition:border-color .2s,background .2s}
 .garage-stat span{display:block;font-size:11px;color:#a9cbd6}
 .garage-stat strong{display:block;font-size:clamp(17px,1.8vw,23px);color:#53d9e8;margin-top:6px;overflow-wrap:anywhere}
 .garage-stat small{display:block;margin-top:4px;color:#91b8c5;font-size:10px}
+.garage-stat.individual-stat{border-top-color:#45d4a3;background:rgba(20,78,76,.55)}
+.garage-selected-plan{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 13px;margin-bottom:10px;border:1px solid rgba(120,205,220,.2);border-radius:10px;background:rgba(10,43,64,.48);flex-shrink:0}
+.garage-selected-plan strong{display:block;color:#e0f5f8;font-size:12px}
+.garage-selected-plan span{display:block;margin-top:3px;color:#91b8c5;font-size:10px}
+.garage-selection-hint{color:#53d9e8!important;font-size:10px!important;text-align:right}
 .garage-content-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 8px 12px 0;scrollbar-width:thin;scrollbar-color:rgba(83,217,232,.55) rgba(10,43,64,.35)}
 .garage-content-scroll::-webkit-scrollbar{width:7px}
 .garage-content-scroll::-webkit-scrollbar-track{background:rgba(10,43,64,.35);border-radius:10px}
@@ -171,10 +178,13 @@ require __DIR__ . '/includes/header.php';
 .garage-button.danger:hover{background:rgba(185,54,74,.7);color:#ffe9ec}
 .garage-plans{border-top:1px solid rgba(120,205,220,.2);margin-top:13px;padding-top:12px}
 .garage-plans h4{font-size:12px;margin:0 0 9px;color:#8cecf3}
-.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:9px;margin-top:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.garage-plan{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;background:rgba(10,43,64,.56);border:1px solid rgba(120,205,220,.2);border-radius:9px;margin-top:8px;cursor:pointer;transition:background .2s,border-color .2s,box-shadow .2s;outline:none}
+.garage-plan:hover{background:rgba(18,65,88,.8);border-color:#08b9d0}
+.garage-plan:focus-visible{outline:2px solid #08b9d0;outline-offset:2px}
+.garage-plan.selected{background:rgba(8,185,208,.13);border-color:#08b9d0;box-shadow:0 0 0 1px rgba(8,185,208,.16)}
 .garage-plan h5{font-size:12px;margin:0 0 5px;color:#e0f5f8}
 .garage-plan p{font-size:10px;color:#a9cbd6;margin:3px 0}
-.garage-plan-actions{display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
+.garage-plan-actions{position:relative;z-index:2;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0}
 .garage-plan-actions form{margin:0}
 .garage-empty{padding:16px;text-align:center;color:#a9cbd6;background:rgba(10,43,64,.5);border:1px dashed rgba(120,205,220,.3);border-radius:9px;font-size:11px}
 .garage-unassigned{margin-top:18px}
@@ -205,6 +215,8 @@ require __DIR__ . '/includes/header.php';
 .garage-stat{padding:10px}
 .garage-stat strong{font-size:18px}
 .garage-stat small{font-size:9px}
+.garage-selected-plan{align-items:flex-start;flex-direction:column}
+.garage-selection-hint{text-align:left}
 .garage-content-scroll .section-heading h2{font-size:16px}
 .garage-bike-card{padding:11px}
 .garage-bike-info{gap:12px}
@@ -243,27 +255,35 @@ require __DIR__ . '/includes/header.php';
         <div class="alert error"><?= h($error) ?></div>
     <?php endforeach; ?>
 
-    <div class="garage-stats" data-guide="garage-overview">
-        <div class="garage-stat">
-            <span>Total Bicycles</span>
-            <strong><?= count($bicycles) ?></strong>
-            <small>Registered bicycles</small>
-        </div>
-        <div class="garage-stat">
-            <span>Saved Build Plans</span>
-            <strong><?= count($plans) ?></strong>
-            <small>Plans created in Bicycle Builder</small>
-        </div>
-        <div class="garage-stat">
+    <div class="garage-stats" id="garageStats" data-guide="garage-overview">
+        <div class="garage-stat" data-stat-card>
             <span>Total Build Budget</span>
-            <strong>₱<?= number_format($totalBudget, 2) ?></strong>
-            <small>Combined target budgets</small>
+            <strong id="statPlanBudget"><?= money($totalBudget) ?></strong>
+            <small id="statPlanBudgetNote">Combined budgets of all plans</small>
         </div>
-        <div class="garage-stat">
-            <span>Planned Parts Cost</span>
-            <strong>₱<?= number_format($totalPartsCost, 2) ?></strong>
-            <small><?= $totalSelectedParts ?> selected parts</small>
+        <div class="garage-stat" data-stat-card>
+            <span>Total Selected Components</span>
+            <strong id="statSelectedParts"><?= number_format($totalSelectedParts) ?></strong>
+            <small id="statSelectedPartsNote">Components across all plans</small>
         </div>
+        <div class="garage-stat" data-stat-card>
+            <span>Total Planned Cost</span>
+            <strong id="statPartsCost"><?= money($totalPartsCost) ?></strong>
+            <small id="statPartsCostNote">Combined cost of selected parts</small>
+        </div>
+        <div class="garage-stat" data-stat-card>
+            <span>Total Remaining Budget</span>
+            <strong id="statRemainingBudget"><?= money($totalRemainingBudget) ?></strong>
+            <small id="statRemainingBudgetNote">Remaining across all plans</small>
+        </div>
+    </div>
+
+    <div class="garage-selected-plan" id="garageSelectedPlan">
+        <div>
+            <strong id="selectedPlanName">All Build Plans</strong>
+            <span id="selectedPlanDetails">Combined statistics from all your saved build plans.</span>
+        </div>
+        <span class="garage-selection-hint" id="selectedPlanHint">Showing all plans</span>
     </div>
 
     <div class="garage-content-scroll">
@@ -315,7 +335,16 @@ require __DIR__ . '/includes/header.php';
                                 <div class="garage-empty">No saved build plans are associated with this bicycle yet.</div>
                             <?php else: ?>
                                 <?php foreach ($bikePlans as $plan): ?>
-                                    <div class="garage-plan">
+                                    <div class="garage-plan" data-plan-select tabindex="0" role="button" aria-pressed="false" aria-label="Select <?= h($plan['build_name']) ?> statistics"
+                                        data-plan-id="<?= (int)$plan['project_id'] ?>"
+                                        data-plan-name="<?= h($plan['build_name']) ?>"
+                                        data-plan-type="<?= h(!empty($plan['bicycle_type']) ? $plan['bicycle_type'] : $bike['bicycle_type']) ?>"
+                                        data-plan-brand="<?= h($plan['bicycle_brand']) ?>"
+                                        data-plan-model="<?= h($plan['bicycle_model']) ?>"
+                                        data-plan-status="<?= h($plan['status']) ?>"
+                                        data-plan-budget="<?= h(number_format((float)$plan['budget_amount'], 2, '.', '')) ?>"
+                                        data-plan-parts="<?= (int)$plan['selected_parts'] ?>"
+                                        data-plan-cost="<?= h(number_format((float)$plan['parts_total'], 2, '.', '')) ?>">
                                         <div>
                                             <h5><?= h($plan['build_name']) ?></h5>
                                             <p>
@@ -357,7 +386,16 @@ require __DIR__ . '/includes/header.php';
                     </div>
                 </div>
                 <?php foreach ($unassignedPlans as $plan): ?>
-                    <div class="garage-plan">
+                    <div class="garage-plan" data-plan-select tabindex="0" role="button" aria-pressed="false" aria-label="Select <?= h($plan['build_name']) ?> statistics"
+                        data-plan-id="<?= (int)$plan['project_id'] ?>"
+                        data-plan-name="<?= h($plan['build_name']) ?>"
+                        data-plan-type="<?= h($plan['bicycle_type']) ?>"
+                        data-plan-brand="<?= h($plan['bicycle_brand']) ?>"
+                        data-plan-model="<?= h($plan['bicycle_model']) ?>"
+                        data-plan-status="<?= h($plan['status']) ?>"
+                        data-plan-budget="<?= h(number_format((float)$plan['budget_amount'], 2, '.', '')) ?>"
+                        data-plan-parts="<?= (int)$plan['selected_parts'] ?>"
+                        data-plan-cost="<?= h(number_format((float)$plan['parts_total'], 2, '.', '')) ?>">
                         <div>
                             <h5><?= h($plan['build_name']) ?></h5>
                             <p><?= (int)$plan['selected_parts'] ?> selected part(s) · Parts cost: ₱<?= number_format((float)$plan['parts_total'], 2) ?></p>
@@ -400,13 +438,150 @@ require __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-document.querySelectorAll('.delete-plan-form').forEach(function(form) {
-    form.addEventListener('submit', function(event) {
-        if (!confirm('Are you sure you want to delete this build plan? Its selected parts and unused bicycle profile will also be deleted.')) {
-            event.preventDefault();
+(function() {
+    var plans = document.querySelectorAll('[data-plan-select]');
+    var selectedPlan = null;
+    var selectedName = document.getElementById('selectedPlanName');
+    var selectedDetails = document.getElementById('selectedPlanDetails');
+    var selectedHint = document.getElementById('selectedPlanHint');
+    var budgetValue = document.getElementById('statPlanBudget');
+    var partsValue = document.getElementById('statSelectedParts');
+    var costValue = document.getElementById('statPartsCost');
+    var remainingValue = document.getElementById('statRemainingBudget');
+    var budgetNote = document.getElementById('statPlanBudgetNote');
+    var partsNote = document.getElementById('statSelectedPartsNote');
+    var costNote = document.getElementById('statPartsCostNote');
+    var remainingNote = document.getElementById('statRemainingBudgetNote');
+    var statCards = document.querySelectorAll('[data-stat-card]');
+
+    var allPlans = {
+        budget: <?= json_encode($totalBudget) ?>,
+        parts: <?= json_encode($totalSelectedParts) ?>,
+        cost: <?= json_encode($totalPartsCost) ?>
+    };
+
+    function peso(amount) {
+        return (amount < 0 ? '-₱' : '₱') + Math.abs(amount).toLocaleString('en-PH', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function updateStatCards(values, notes) {
+        budgetValue.textContent = values.budget;
+        partsValue.textContent = values.parts;
+        costValue.textContent = values.cost;
+        remainingValue.textContent = values.remaining;
+        budgetNote.textContent = notes.budget;
+        partsNote.textContent = notes.parts;
+        costNote.textContent = notes.cost;
+        remainingNote.textContent = notes.remaining;
+    }
+
+    function showAllPlans() {
+        selectedPlan = null;
+
+        plans.forEach(function(plan) {
+            plan.classList.remove('selected');
+            plan.setAttribute('aria-pressed', 'false');
+        });
+
+        statCards.forEach(function(card) {
+            card.classList.remove('individual-stat');
+        });
+
+        selectedName.textContent = 'All Build Plans';
+        selectedDetails.textContent = 'Combined statistics from all your saved build plans.';
+        selectedHint.textContent = 'Showing all plans';
+
+        updateStatCards({
+            budget: peso(allPlans.budget),
+            parts: allPlans.parts.toLocaleString('en-PH'),
+            cost: peso(allPlans.cost),
+            remaining: peso(allPlans.budget - allPlans.cost)
+        }, {
+            budget: 'Combined budgets of all plans',
+            parts: 'Components across all plans',
+            cost: 'Combined cost of selected parts',
+            remaining: 'Remaining across all plans'
+        });
+    }
+
+    function selectPlan(plan) {
+        var name = plan.getAttribute('data-plan-name') || 'Build Plan';
+        var type = plan.getAttribute('data-plan-type') || '';
+        var brand = plan.getAttribute('data-plan-brand') || '';
+        var model = plan.getAttribute('data-plan-model') || '';
+        var status = plan.getAttribute('data-plan-status') || '';
+        var budget = parseFloat(plan.getAttribute('data-plan-budget')) || 0;
+        var parts = parseInt(plan.getAttribute('data-plan-parts'), 10) || 0;
+        var cost = parseFloat(plan.getAttribute('data-plan-cost')) || 0;
+        var remaining = budget - cost;
+
+        selectedPlan = plan;
+
+        plans.forEach(function(item) {
+            var active = item === plan;
+            item.classList.toggle('selected', active);
+            item.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        statCards.forEach(function(card) {
+            card.classList.add('individual-stat');
+        });
+
+        selectedName.textContent = name;
+        selectedDetails.textContent = [type, brand, model, status].filter(function(value) {
+            return value !== '';
+        }).join(' · ');
+        selectedHint.textContent = 'Individual plan · Click the same plan again to show all plans';
+
+        updateStatCards({
+            budget: budget > 0 ? peso(budget) : 'Not set',
+            parts: parts.toLocaleString('en-PH'),
+            cost: peso(cost),
+            remaining: budget > 0 ? peso(remaining) : 'Not set'
+        }, {
+            budget: 'Budget for this build plan',
+            parts: 'Components in this plan',
+            cost: 'Total planned cost of this plan',
+            remaining: budget > 0 ? (remaining >= 0 ? 'Available budget' : 'Over the planned budget') : 'No target budget assigned'
+        });
+    }
+
+    function togglePlan(plan) {
+        if (selectedPlan === plan) {
+            showAllPlans();
+        } else {
+            selectPlan(plan);
         }
+    }
+
+    plans.forEach(function(plan) {
+        plan.addEventListener('click', function(event) {
+            if (event.target.closest('.garage-plan-actions')) return;
+            togglePlan(plan);
+        });
+
+        plan.addEventListener('keydown', function(event) {
+            if (event.target !== plan) return;
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                togglePlan(plan);
+            }
+        });
     });
-});
+
+    document.querySelectorAll('.delete-plan-form').forEach(function(form) {
+        form.addEventListener('submit', function(event) {
+            if (!confirm('Are you sure you want to delete this build plan? Its selected parts and unused bicycle profile will also be deleted.')) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    showAllPlans();
+})();
 </script>
 <script src="<?= h(url('assets/js/user-guide.js')) ?>?v=2"></script>
 

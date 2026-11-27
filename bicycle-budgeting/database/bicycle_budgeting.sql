@@ -168,3 +168,9 @@ SET @sql = IF(
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
+ALTER TABLE users
+ADD COLUMN first_name VARCHAR(75) NULL AFTER full_name,
+ADD COLUMN last_name VARCHAR(75) NULL AFTER first_name,
+ADD COLUMN phone_number VARCHAR(30) NULL AFTER email,
+ADD COLUMN birthday DATE NULL AFTER phone_number,
+ADD COLUMN gender ENUM('Male', 'Female') NULL AFTER birthday;

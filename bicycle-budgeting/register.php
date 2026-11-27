@@ -17,16 +17,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your session expired. Refresh the page and try again.';
     }
 
-    $name = trim((string)(isset($_POST['full_name']) ? $_POST['full_name'] : ''));
+    $firstName = trim((string)(isset($_POST['first_name']) ? $_POST['first_name'] : ''));
+    $lastName = trim((string)(isset($_POST['last_name']) ? $_POST['last_name'] : ''));
+    $fullName = trim($firstName . ' ' . $lastName);
     $email = strtolower(trim((string)(isset($_POST['email']) ? $_POST['email'] : '')));
     $password = (string)(isset($_POST['password']) ? $_POST['password'] : '');
     $confirm = (string)(isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '');
 
-    if ($name === '' || strlen($name) > 150) {
-        $errors[] = 'Enter your name.';
+    if ($firstName === '' || strlen($firstName) > 75) {
+        $errors[] = 'Enter a valid first name with a maximum of 75 characters.';
     }
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    if ($lastName === '' || strlen($lastName) > 75) {
+        $errors[] = 'Enter a valid last name with a maximum of 75 characters.';
+    }
+
+    if (strlen($fullName) > 150) {
+        $errors[] = 'Your complete name must not exceed 150 characters.';
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 190) {
         $errors[] = 'Enter a valid email address.';
     }
 
@@ -45,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->fetch()) {
             $errors[] = 'An account with this email already exists.';
         } else {
-            $stmt = $pdo->prepare('INSERT INTO users (full_name, email, password_hash) VALUES (?, ?, ?)');
-            $stmt->execute(array($name, $email, password_hash($password, PASSWORD_DEFAULT)));
+            $stmt = $pdo->prepare('INSERT INTO users (first_name, last_name, full_name, email, password_hash) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute(array($firstName, $lastName, $fullName, $email, password_hash($password, PASSWORD_DEFAULT)));
             set_flash('success', 'Account created. You can now log in.');
             redirect('login.php');
         }
@@ -100,14 +110,19 @@ require __DIR__ . '/includes/header.php';
         <form method="POST" action="<?= h(url('register.php')) ?>" class="register-form">
             <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
 
-            <div class="register-field full">
-                <label for="full_name">Full Name</label>
-                <input id="full_name" name="full_name" type="text" placeholder="Enter your full name" required maxlength="150" value="<?= h(isset($_POST['full_name']) ? $_POST['full_name'] : '') ?>">
+            <div class="register-field">
+                <label for="first_name">First Name</label>
+                <input id="first_name" name="first_name" type="text" placeholder="Enter your first name" required maxlength="75" autocomplete="given-name" value="<?= h(isset($_POST['first_name']) ? $_POST['first_name'] : '') ?>">
+            </div>
+
+            <div class="register-field">
+                <label for="last_name">Last Name</label>
+                <input id="last_name" name="last_name" type="text" placeholder="Enter your last name" required maxlength="75" autocomplete="family-name" value="<?= h(isset($_POST['last_name']) ? $_POST['last_name'] : '') ?>">
             </div>
 
             <div class="register-field full">
                 <label for="email">Email Address</label>
-                <input id="email" type="email" name="email" placeholder="Enter your email address" required value="<?= h(isset($_POST['email']) ? $_POST['email'] : '') ?>">
+                <input id="email" type="email" name="email" placeholder="Enter your email address" required maxlength="190" autocomplete="email" value="<?= h(isset($_POST['email']) ? $_POST['email'] : '') ?>">
             </div>
 
             <div class="register-field">
